@@ -2,13 +2,14 @@
 #include "webserv.hpp"
 
 class Socket {
-	Server				*_server;
-	string				_ip;
-	int					_port;
-	int					_master_socket;
-	struct sockaddr_in	_address;
-	int 				_clients_amount;
-	std::vector<int>	_clients;
+	Server *_server;
+	string _ip;
+	int _port;
+	int _master_socket;
+	struct sockaddr_in _address;
+	int _clients_amount;
+	std::vector<int> _clients;
+
   public:
 	static fd_set _readfds;
 	static int _max_fd;
@@ -30,6 +31,3 @@ class Socket {
 	}
 */
 };
-
-
-

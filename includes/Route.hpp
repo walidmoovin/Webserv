@@ -2,10 +2,12 @@
 #include "webserv.hpp"
 
 class Route {
+  protected:
 	string _root;
 	string _ret;
 	std::vector<string> _indexs;
 	bool _autoindex;
+
   public:
 	Route(JSONNode *datas);
 	~Route(void);

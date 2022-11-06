@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 
 Route::Route(JSONNode *datas) {
-	JSONObject object = datas->obj();	
+	JSONObject object = datas->obj();
 	if (object["root"])
 		_root = object["root"]->str();
 	if (object["return"])
@@ -20,7 +20,5 @@ Route::~Route(void) {}
 
 string getRoot(void);
 string getReturn(void);
-std::vector<string> Route::getIndexs(void) {
-	return _indexs;
-}
+std::vector<string> Route::getIndexs(void) { return _indexs; }
 bool getAutoindex(void);

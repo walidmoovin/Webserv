@@ -2,9 +2,10 @@
 #include "webserv.hpp"
 
 class Env {
-    std::vector<Server *> _servers;
+	std::vector<Server *> _servers;
+
   public:
-    Env(JSONNode *conf);
+	Env(JSONNode *conf);
 	void set_fds();
 	void refresh();
 };
