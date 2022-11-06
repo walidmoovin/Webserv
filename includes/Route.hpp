@@ -7,6 +7,6 @@ class Route {
 	std::vector<string> _indexs;
 	bool _autoindex;
   public:
-	Route();
-	~Route();
+	Route(JSONNode *datas);
+	~Route(void);
 };

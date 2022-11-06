@@ -1,7 +1,7 @@
 
 #include "webserv.hpp"
 
-Socket::Socket(string def) {
+Socket::Socket(Server *server, string def): _server(server) {
     size_t sep_pos = def.rfind(':');
     size_t ip6_endpos = def.rfind(']');
 
@@ -103,6 +103,9 @@ void Socket::refresh() {
 }
 
 void Socket::answer(int fd, string request) {
+	string uri = "path/to/page/";
+	Route *route = _server->get_route(uri);
+	(void)route;
     char r404[72] =
         "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 4\n\n404!";
 	cout << request << "\n";

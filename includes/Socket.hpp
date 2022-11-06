@@ -2,6 +2,7 @@
 #include "webserv.hpp"
 
 class Socket {
+	Server				*_server;
 	string				_ip;
 	int					_port;
 	int					_master_socket;
@@ -13,7 +14,7 @@ class Socket {
 	static int _max_fd;
 	static int _min_fd;
 	static int _amount;
-	Socket(string def);
+	Socket(Server *server, string def);
 	~Socket();
 	int launch();
 	void set_fds();

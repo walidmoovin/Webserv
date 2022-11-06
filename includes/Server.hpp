@@ -1,7 +1,7 @@
 #pragma once
 #include "webserv.hpp"
 
-class Server {
+class Server: public Route{
 	string				_name;
 	std::vector<Socket *>	_sockets;
 	std::map<string, Route *> _routes;
@@ -11,4 +11,5 @@ class Server {
 	~Server();
 	void set_fds();
 	void refresh();
+	Route *get_route(string uri);
 };

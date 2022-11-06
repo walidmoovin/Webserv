@@ -7,6 +7,7 @@ class JSONNode {
     JSONList lst();
     string str();
     int nbr();
+	bool boo();
 
   private:
     enum Type { OBJECT, LIST, STRING, NUMBER, BOOLEAN, NULL_TYPE };

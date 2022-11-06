@@ -23,6 +23,11 @@ int JSONNode::nbr() {
         return values.nbr;
     throw std::logic_error("Improper return");
 }
+bool JSONNode::boo() {
+	if (type == BOOLEAN)
+		return values.bValue;
+    throw std::logic_error("Improper return");
+}
 
 void JSONNode::setObject(JSONObject *object) {
     this->values.object = object;
