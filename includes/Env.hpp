@@ -5,6 +5,6 @@ class Env {
     std::vector<Server *> _servers;
   public:
     Env(JSONNode *conf);
-	void listen();
-	void answer();
+	void set_fds();
+	void refresh();
 };

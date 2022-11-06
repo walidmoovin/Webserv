@@ -16,9 +16,9 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <sstream>
 #include <string>
+#include <map>
 #include <vector>
 
 #define DEBUG 0

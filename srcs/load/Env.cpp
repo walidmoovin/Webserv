@@ -15,19 +15,16 @@ Env::Env(JSONNode *conf) {
     }
     // delete conf;
 }
-void Env::listen() {
+void Env::set_fds() {
     for (std::vector<Server *>::iterator it = _servers.begin();
          it < _servers.end(); it++) {
-        (*it)->check();
+        (*it)->set_fds();
     }
-	cout << "finished env listen\n";
 }
 
-void Env::answer() {
-	cout << "env start answer\n";
+void Env::refresh() {
     for (std::vector<Server *>::iterator it = _servers.begin();
          it < _servers.end(); it++) {
-        (*it)->answer();
+        (*it)->refresh();
     }
-	cout << "finished env answer\n";
 }

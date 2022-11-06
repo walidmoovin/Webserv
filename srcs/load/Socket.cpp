@@ -2,20 +2,21 @@
 #include "webserv.hpp"
 
 Socket::Socket(string def) {
-    size_t split = def.rfind(':');
+    size_t sep_pos = def.rfind(':');
+    size_t ip6_endpos = def.rfind(']');
 
-    string tmp = def.substr(0, split);
-    _ip = isInt(tmp)  || tmp == "localhost" ? "127.0.0.1" : tmp;
-    tmp = def.substr(split + 1, def.length() - split - 1).c_str();
+    string tmp = def.substr(0, sep_pos);
+    if (ip6_endpos > sep_pos)
+        _ip = def;
+    else
+        _ip = isInt(tmp) || tmp == "localhost" ? "127.0.0.1" : tmp;
+    tmp = def.substr(sep_pos + 1, def.length() - sep_pos - 1).c_str();
     _port = !isInt(tmp) ? 80 : std::atoi(tmp.c_str());
-
-    _max_clients = 30;
-    for (int i = 0; i < _max_clients; i++)
-        _client_socket[i] = 0;
+    _clients_amount = 0;
 }
 Socket::~Socket() {
-	close(_master_socket);
-	cout << "Socket destroyed!\n";
+    close(_master_socket);
+    cout << "Socket destroyed!\n";
 }
 
 int Socket::launch() {
@@ -47,43 +48,32 @@ int Socket::launch() {
         cout << "Listen: " << strerror(errno) << "\n";
         return (EXIT_FAILURE);
     }
-	cout << "Socket::_master_socket: " << _master_socket << "\n";
-	if (_master_socket < _min_sd)
-		_min_sd = _master_socket;
-	_amount++;
-	return (EXIT_SUCCESS);
+    cout << "Socket::_master_socket: " << _master_socket << "\n";
+    if (_master_socket < _min_fd)
+        _min_fd = _master_socket;
+    _amount++;
+    return (EXIT_SUCCESS);
 }
 
-void Socket::check() {
-    int sd;
-
+void Socket::set_fds() {
     FD_SET(_master_socket, &_readfds);
-	cout << "sd_set " << _master_socket << "\n";
 
-    for (int i = 0; i < _max_clients; i++) {
-        sd = _client_socket[i];
-		//cout << "id: " << i << " -> sd: " << sd << "\n";
-        if (sd > 0)
-		{
-            FD_SET(sd, &_readfds);
-			cout << "fd_set " << sd << "\n";
-		}
-        if (sd > _max_sd)
-            _max_sd = sd;
+    for (std::vector<int>::iterator it = _clients.begin(); it < _clients.end();
+         it++) {
+        FD_SET(*it, &_readfds);
+        if (*it > _max_fd)
+            _max_fd = *it;
     }
-	cout << "Socket checked\n";
 }
 
-
-void Socket::answer() {
-	int i, sd, valread;
+void Socket::refresh() {
+	std::vector<int>::iterator it;
+    int valread;
     int addrlen = sizeof(_address);
     char buffer[1024];
-    char r404[72] =
-        "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 4\n\n404!";
     if (FD_ISSET(_master_socket, &_readfds)) {
         int new_socket = accept(_master_socket, (struct sockaddr *)&_address,
-                            (socklen_t *)&addrlen);
+                                (socklen_t *)&addrlen);
         if (new_socket < 0) {
             cout << "Accept: " << strerror(errno) << "\n";
             exit(EXIT_FAILURE);
@@ -94,36 +84,31 @@ void Socket::answer() {
         cout << "New connection, socket fd is " << new_socket
              << ", ip is : " << inet_ntoa(_address.sin_addr)
              << ", port : " << ntohs(_address.sin_port) << "\n";
-        for (i = 0; i < _max_clients; i++) {
-            if (_client_socket[i] == 0) {
-                _client_socket[i] = new_socket;
-                cout << "Adding to list of sockets as " << i << "\n";
-                break;
-            }
-        }
+		_clients.push_back(new_socket);
     }
-    cout << "Socket: " << _ip << ":" << _port << "\n";
-    for (i = 0; i < _max_clients; i++) {
-        sd = _client_socket[i];
-        if (FD_ISSET(sd, &_readfds)) {
-            cout << "Client " << i << ": set\n";
-            valread = read(sd, buffer, 1024);
+    for (it = _clients.begin(); it < _clients.end(); it++) {
+        if (FD_ISSET(*it, &_readfds)) {
+            valread = read(*it, buffer, 1024);
             if (valread == 0) {
-                getpeername(sd, (struct sockaddr *)&_address,
+                getpeername(*it, (struct sockaddr *)&_address,
                             (socklen_t *)&addrlen);
                 cout << "Host disconnected, ip " << inet_ntoa(_address.sin_addr)
                      << ", port " << ntohs(_address.sin_port) << "\n";
-                close(sd);
-                _client_socket[i] = 0;
-            } else {
-                cout << buffer << "\n";
-#ifdef __linux__
-                send(sd, r404, strlen(r404), MSG_NOSIGNAL);
-#elif __APPLE__
-                send(sd, r404, strlen(r404), 0);
-#endif
-            }
+                close(*it);
+				_clients.erase(it);
+            } else
+				this->answer(*it, buffer);
         }
     }
-	cout << "Socket answered\n";
+}
+
+void Socket::answer(int fd, string request) {
+    char r404[72] =
+        "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 4\n\n404!";
+	cout << request << "\n";
+#ifdef __linux__
+	send(fd, r404, strlen(r404), MSG_NOSIGNAL);
+#elif __APPLE__
+	send(fd, r404, strlen(r404), 0);
+#endif
 }

@@ -22,18 +22,16 @@ Server::~Server() {
 	cout << "Server destroyed!\n";
 }
 
-void Server::check() {
+void Server::set_fds() {
     for (std::vector<Socket *>::iterator it = _sockets.begin();
          it < _sockets.end(); it++) {
-        (*it)->check();
+        (*it)->set_fds();
     }
-	cout << "finished serv listen\n";
 }
 
-void Server::answer() {
+void Server::refresh() {
     for (std::vector<Socket *>::iterator it = _sockets.begin();
          it < _sockets.end(); it++) {
-        (*it)->answer();
+        (*it)->refresh();
     }
-	cout << "finished serv answer\n";
 }

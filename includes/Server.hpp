@@ -9,6 +9,6 @@ class Server {
   public:
 	Server(JSONNode *server);
 	~Server();
-	void check();
-	void answer();
+	void set_fds();
+	void refresh();
 };

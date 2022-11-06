@@ -6,18 +6,19 @@ class Socket {
 	int					_port;
 	int					_master_socket;
 	struct sockaddr_in	_address;
-	int 				_max_clients;
-	int 				_client_socket[30];
+	int 				_clients_amount;
+	std::vector<int>	_clients;
   public:
 	static fd_set _readfds;
-	static int _max_sd;
-	static int _min_sd;
+	static int _max_fd;
+	static int _min_fd;
 	static int _amount;
 	Socket(string def);
 	~Socket();
 	int launch();
-	void check();
-	void answer();
+	void set_fds();
+	void refresh();
+	void answer(int fd, string request);
 	/*
 	Socket& operator=(Socket &src) {
 		_ip = src._ip;
