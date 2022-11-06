@@ -1,19 +1,11 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: narnaud <narnaud@student.42.fr>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/02 11:16:17 by narnaud           #+#    #+#             */
-/*   Updated: 2022/11/02 12:24:25 by narnaud          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 #pragma once
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 #include <unistd.h>
 
 #include <cerrno>
@@ -21,5 +13,25 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
+
+class Route {
+		std::string _location;
+		std::string _root;
+		std::string _index;
+	public:
+		Route(std::string location, std::string root, std::string index);
+		~Route();
+};
+
+class Server {
+		unsigned int _port;
+		std::string _server_name;
+		std::vector<Route>	_routes;
+	public:
+		Server(char *filename);
+		~Server();
+};
+
 void	*ft_memset(void *b, int c, size_t len);
 

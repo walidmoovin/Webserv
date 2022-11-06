@@ -1,5 +1,5 @@
 NAME= server
-SRCS= srcs/server.cpp srcs/tools.cpp
+SRCS= srcs/server.cpp srcs/tools.cpp srcs/read_conf.cpp
 OBJS= $(SRCS:.cpp=.o)
 CXX=c++
 CXXFLAGS=  -Wextra -Wall -std=c++98

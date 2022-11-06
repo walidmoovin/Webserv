@@ -1,21 +1,4 @@
-/**
-	Handle multiple socket connections with select and fd_set on Linux
-*/
- 
-#include <iostream>
-
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>   //strlen
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>   //close
-#include <arpa/inet.h>    //close
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
- 
+#include "server.hpp"
 #define PORT 80
 
 int main(void)
@@ -39,7 +22,7 @@ int main(void)
         exit(EXIT_FAILURE);
     }
  
-    if( setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
+    if ( setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
     {
 		std::cout << std::strerror(errno) << std::endl;
         exit(EXIT_FAILURE);
