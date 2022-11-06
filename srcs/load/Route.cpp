@@ -18,7 +18,51 @@ Route::Route(JSONNode *datas) {
 
 Route::~Route(void) {}
 
-string getRoot(void);
-string getReturn(void);
+string Route::getRoot(void) { return _root; }
+string Route::getReturn(void) { return _ret; }
 std::vector<string> Route::getIndexs(void) { return _indexs; }
-bool getAutoindex(void);
+
+string Route::getAutoindex(string uri) {
+	if (!_autoindex)
+		return "4\n\n404!";
+	std::stringstream page;
+	std::stringstream ret;
+	string path = correctUri(uri);
+	DIR *dir;
+	struct dirent *entry;
+	struct stat info;
+
+	if ((dir = opendir(path.c_str())) == NULL)
+		ret << " 19\n\nFolder unaccesible.";
+	else {
+		page << path << " files :\n";
+		while ((entry = readdir(dir)) != NULL) {
+			if (entry->d_name[0] == '.')
+				continue;
+			page << "- " << entry->d_name << "\n";
+			if (stat(path.c_str(), &info) != 0)
+				std::cerr << "stat() error on " << path << ": "
+						  << strerror(errno) << "\n";
+		}
+		closedir(dir);
+	}
+	ret << page.str().length() << "\n\n" << page.str();
+	return ret.str();
+}
+
+string Route::correctUri(string uri) {
+	std::stringstream ret;
+	int slash_pos;
+	string root = _root;
+
+	cout << "Correcting request: " << uri
+		 << "with root: " << root << "\n";
+	while ((slash_pos = root.find('/')) > 0) {
+		ret << root.substr(0, slash_pos);
+		root.erase(0, slash_pos);
+		uri = uri.substr(uri.find('/'), uri.length());
+	}
+	ret << uri;
+	cout << "resutlt: " << ret.str() << "\n";
+	return ret.str();
+}

@@ -1,11 +1,14 @@
 #pragma once
 
 #include <arpa/inet.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
+#include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include <cctype>

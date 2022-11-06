@@ -14,14 +14,14 @@
 			"indexs": ["index.html"],
 			"locations":
 			{
-				"/docs": 
+				"docs/": 
 				{
-					"root": "./documents",
+					"root": "documents/",
 					"autoindex": true
 				},
-				"/img": 
+				"img/": 
 				{
-					"root": "./images"
+					"root": "images/"
 				}
 
 			}

@@ -14,5 +14,6 @@ class Route {
 	string getRoot(void);
 	string getReturn(void);
 	std::vector<string> getIndexs(void);
-	bool getAutoindex(void);
+	string getAutoindex(string uri);
+	string correctUri(string uri);
 };

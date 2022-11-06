@@ -1,7 +1,5 @@
 #include "webserv.hpp"
 
-#define DEBUG 0
-
 JSONObject JSONNode::obj() {
 	if (type == OBJECT)
 		return *values.object;

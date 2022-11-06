@@ -33,7 +33,10 @@ int Socket::launch() {
 		return (EXIT_FAILURE);
 	}
 
-	_address.sin_family = AF_INET;
+	if (_ip.at(0) == '[')
+		_address.sin_family = AF_INET6;
+	else
+		_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = inet_addr(_ip.c_str());
 	_address.sin_port = htons(_port);
 
@@ -97,23 +100,27 @@ void Socket::refresh() {
 				close(*it);
 				_clients.erase(it);
 			} else {
-				buffer[valread]='\0';
-				this->answer(*it, buffer);
+				buffer[valread] = '\0';
+				answer(*it, buffer);
 			}
 		}
 	}
 }
 
 void Socket::answer(int fd, string request) {
-	string uri = "path/to/page/";
-	Route *route = _server->get_route(uri);
-	(void)route;
-	char r404[72] =
-		"HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 4\n\n404!";
 	cout << request << "\n|===|===|===|\n";
+	std::stringstream answer;
+	answer << "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: ";
+	string uri = "docs/";
+	Route *route = _server->get_route(uri);
+	answer << route->getAutoindex(uri);
+	cout << answer.str() << "\n|===|===|===|\n";
+	send_answer(fd, answer.str());
+}
+void Socket::send_answer(int fd, string msg) {
 #ifdef __linux__
-	send(fd, r404, strlen(r404), MSG_NOSIGNAL);
+	send(fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 #elif __APPLE__
-	send(fd, r404, strlen(r404), 0);
+	send(fd, msg.c_str(), msg.length(), 0);
 #endif
 }

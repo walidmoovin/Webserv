@@ -21,6 +21,7 @@ class Socket {
 	void set_fds();
 	void refresh();
 	void answer(int fd, string request);
+	void send_answer(int fd, string msg);
 	/*
 	Socket& operator=(Socket &src) {
 		_ip = src._ip;
