@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
@@ -16,11 +17,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "json/Parser.hpp"
-#include "load/Env.hpp"
 
 using std::string;
 using std::cout;
 using std::strerror;
 
 void *ft_memset(void *b, int c, size_t len);
+bool isInt(string str);
+
+#include "json/Parser.hpp"
+#include "load/Env.hpp"

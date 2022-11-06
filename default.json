@@ -4,12 +4,12 @@
 	"servers": [
 		{
 			"server_name": "localhost",
-			"listens": ["15000", "[::]:88"],
+			"listens": ["80", "localhost:80", "localhost", "[::]:443"],
 			"return": "301 https://$host$uri"
 		},
 		{
 			"server_name": "localhost",
-			"listens": ["150005", "[::]:88"],
+			"listens": ["8080"],
 			"root": "./public",
 			"index": ["index.html"],
 			"locations":
