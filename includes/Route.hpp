@@ -1,4 +1,5 @@
-#include "../webserv.hpp"
+#pragma once
+#include "webserv.hpp"
 
 class Route {
 	string _root;

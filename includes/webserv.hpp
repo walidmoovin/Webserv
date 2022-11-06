@@ -1,4 +1,5 @@
 #pragma once
+
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -14,16 +15,30 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
 
-using std::string;
+#define DEBUG 0
+
 using std::cout;
 using std::strerror;
+using std::string;
+
+class JSONNode;
+typedef std::map<string, JSONNode *> JSONObject;
+typedef std::vector<JSONNode *> JSONList;
 
 void *ft_memset(void *b, int c, size_t len);
 bool isInt(string str);
 
-#include "json/Parser.hpp"
-#include "load/Env.hpp"
+#include "Token.hpp"
+#include "Parser.hpp"
+#include "Nodes.hpp"
+
+#include "Env.hpp"
+#include "Route.hpp"
+#include "Socket.hpp"
+#include "Server.hpp"
+
