@@ -1,0 +1,10 @@
+*
+!srcs/*/*.cpp
+!srcs/*/*.hpp
+!srcs/*.hpp
+!srcs/*.cpp
+!Makefile
+!LICENCE
+!README.md
+!default.json
+!.gitignore
