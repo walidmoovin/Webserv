@@ -3,7 +3,7 @@
 
 class Env {
 	//int	_max_clients;
-	std::vector<Server>	_servers;
+	std::vector<Server *>	_servers;
   public:
 	Env(JSONNode *conf) {
         JSONList servers = conf->obj()["servers"]->lst();
@@ -13,10 +13,17 @@ class Env {
              it < servers.end(); it++) {
             	Server *server = new Server(*it);
 				server->launch();
+				_servers.push_back(server);
 			//delete *it;
 			cout << th[i] << " server launched.\n"; 
 			i++;
         }
+		while(1) {
+			for (std::vector<Server *>::iterator it = _servers.begin();
+				 it < _servers.end(); it++) {
+				(*it)->check();
+			}
+		}
 		//delete conf;
 	}
 };
