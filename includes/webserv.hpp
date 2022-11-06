@@ -10,6 +10,7 @@
 
 #include <cctype>
 #include <cerrno>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -26,19 +27,23 @@ using std::cout;
 using std::strerror;
 using std::string;
 
+class Env;
+class Server;
+class Socket;
+class Route;
 class JSONNode;
+
 typedef std::map<string, JSONNode *> JSONObject;
 typedef std::vector<JSONNode *> JSONList;
 
 void *ft_memset(void *b, int c, size_t len);
 bool isInt(string str);
 
+#include "Nodes.hpp"
 #include "Token.hpp"
 #include "Parser.hpp"
-#include "Nodes.hpp"
 
-#include "Env.hpp"
 #include "Route.hpp"
 #include "Socket.hpp"
 #include "Server.hpp"
-
+#include "Env.hpp"

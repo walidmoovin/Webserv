@@ -9,8 +9,15 @@ class Socket {
 	int 				_max_clients;
 	int 				_client_socket[30];
   public:
+	static fd_set _readfds;
+	static int _max_sd;
+	static int _min_sd;
+	static int _amount;
 	Socket(string def);
+	~Socket();
+	int launch();
 	void check();
+	void answer();
 	/*
 	Socket& operator=(Socket &src) {
 		_ip = src._ip;

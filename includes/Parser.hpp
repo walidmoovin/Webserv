@@ -1,4 +1,6 @@
+#pragma once
 #include "webserv.hpp"
+
 
 class JSONParser {
     std::fstream file;

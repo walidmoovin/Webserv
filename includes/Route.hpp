@@ -9,5 +9,4 @@ class Route {
   public:
 	Route();
 	~Route();
-
 };

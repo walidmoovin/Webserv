@@ -1,12 +1,10 @@
 #pragma once
 #include "webserv.hpp"
 
-
-class JSONNode;
-class Server;
-
 class Env {
-    std::vector<Server> _servers;
+    std::vector<Server *> _servers;
   public:
     Env(JSONNode *conf);
+	void listen();
+	void answer();
 };

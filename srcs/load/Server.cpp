@@ -7,19 +7,33 @@ Server::Server(JSONNode *server) {
     if (datas["listens"]) {
         JSONList listens = datas["listens"]->lst();
         for (JSONList::iterator i = listens.begin(); i < listens.end(); i++) {
-            //_listens.push_back((*i)->str());
-            Socket sock((*i)->str());
-            _sockets.push_back(sock);
+            Socket *sock = new Socket((*i)->str());
+			if (sock->launch() == EXIT_SUCCESS) 
+            	_sockets.push_back(sock);
+			else
+				delete sock;
         }
-        //_port = std::atoi(_listens.front().c_str());
     }
     //_routes["default"] = new Route(datas["root"], datas["return"],
-    //datas["index"], datas["autoindex"]);
+    // datas["index"], datas["autoindex"]);
+}
+
+Server::~Server() {
+	cout << "Server destroyed!\n";
 }
 
 void Server::check() {
-    for (std::vector<Socket>::iterator it = _sockets.begin();
+    for (std::vector<Socket *>::iterator it = _sockets.begin();
          it < _sockets.end(); it++) {
-        (*it).check();
+        (*it)->check();
     }
+	cout << "finished serv listen\n";
+}
+
+void Server::answer() {
+    for (std::vector<Socket *>::iterator it = _sockets.begin();
+         it < _sockets.end(); it++) {
+        (*it)->answer();
+    }
+	cout << "finished serv answer\n";
 }
