@@ -9,11 +9,17 @@ class Server {
 
   public:
 	Server(JSONNode *server) {
+		_port = 80;
         JSONObject datas = server->obj();
-		_name = datas["server_name"]->str();
-		JSONList listens = datas["listens"]->lst();
-		for (JSONList::iterator i = listens.begin(); i < listens.end(); i++)
-			_listens.push_back((*i)->str());
+		if (datas["server_name"])
+			_name = datas["server_name"]->str();
+		if (datas["listens"]) {
+			JSONList listens = datas["listens"]->lst();
+			for (JSONList::iterator i = listens.begin(); i < listens.end(); i++)
+				_listens.push_back((*i)->str());
+			_port = std::atoi(_listens.front().c_str());
+
+		}
 		//_routes["default"] = new Route(datas["root"], datas["return"], datas["index"], datas["autoindex"]);
 	}
 	void launch() {

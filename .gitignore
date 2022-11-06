@@ -1,5 +1,7 @@
 *
-!srcs/*/
+!srcs/
+!srcs/load/
+!srcs/json/
 !srcs/*/*.cpp
 !srcs/*/*.hpp
 !srcs/*.hpp

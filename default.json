@@ -1,0 +1,30 @@
+{
+	"max_clients": 30,
+	"root_folder": "./www",
+	"servers": [
+		{
+			"server_name": "localhost",
+			"listens": ["15000", "[::]:88"],
+			"return": "301 https://$host$uri"
+		},
+		{
+			"server_name": "localhost",
+			"listens": ["150005", "[::]:88"],
+			"root": "./public",
+			"index": ["index.html"],
+			"locations":
+			{
+				"/docs": 
+				{
+					"root": "./documents",
+					"autoindex": true
+				},
+				"/img": 
+				{
+					"root": "./images"
+				}
+
+			}
+		}
+	]
+}
