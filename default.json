@@ -11,7 +11,7 @@
 			"server_name": "localhost",
 			"listens": ["8080"],
 			"root": "./public",
-			"index": ["index.html"],
+			"indexs": ["index.html"],
 			"locations":
 			{
 				"/docs": 

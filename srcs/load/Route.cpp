@@ -17,3 +17,10 @@ Route::Route(JSONNode *datas) {
 }
 
 Route::~Route(void) {}
+
+string getRoot(void);
+string getReturn(void);
+std::vector<string> Route::getIndexs(void) {
+	return _indexs;
+}
+bool getAutoindex(void);

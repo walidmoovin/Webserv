@@ -9,4 +9,8 @@ class Route {
   public:
 	Route(JSONNode *datas);
 	~Route(void);
+	string getRoot(void);
+	string getReturn(void);
+	std::vector<string> getIndexs(void);
+	bool getAutoindex(void);
 };
