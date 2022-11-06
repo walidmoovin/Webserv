@@ -3,8 +3,6 @@
 
 class JSONParser {
     std::fstream file;
-    JSONNode *root;
-    JSONNode *current;
     Tokenizer tokenizer;
 
   public:

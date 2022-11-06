@@ -92,8 +92,7 @@ class Tokenizer {
     Token getToken() {
         char c;
         if (file.eof()) {
-            cout << "Exhaused tokens"
-                 << "\n";
+            cout << "Exhaused tokens" << "\n";
             // throw std::exception("Exhausted tokens");
         }
         prevPos = file.tellg();

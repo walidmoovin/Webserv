@@ -1,6 +1,4 @@
 #pragma once
-#include "json/Parser.hpp"
-
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -18,32 +16,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "json/Parser.hpp"
+#include "load/Env.hpp"
 
-class Route {
-    std::vector<std::string> _location;
-    std::vector<std::string> _index;
-    std::string _root;
-
-  public:
-    Route(std::string location, std::string root, std::string index);
-    ~Route();
-};
-
-class Server {
-    unsigned int _port;
-    std::string _server_name;
-    std::vector<Route> *_routes;
-
-  public:
-    Server(std::string name, std::string root, std::string return,
-           JSONNode *listens, JSONNode *indexs, JSONNode *locations);
-    ~Server();
-};
-
-class Env {
-  public:
-    std::vector<Server> *servers;
-    int max_clients;
-};
+using std::string;
+using std::cout;
+using std::strerror;
 
 void *ft_memset(void *b, int c, size_t len);
