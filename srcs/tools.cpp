@@ -17,3 +17,13 @@ bool isInt(string str) {
 			return false;
 	return true;
 }
+
+std::vector<string> split(string str, char delim) {
+	std::vector<std::string> tokens;
+    std::string token;
+    std::stringstream ss(str);
+    while (getline(ss, token, delim)){
+        tokens.push_back(token);
+    }
+	return tokens;
+}

@@ -42,10 +42,24 @@ void Server::refresh(void) {
 }
 
 Route *Server::get_route(string uri) {
-	for (std::map<string, Route *>::iterator it = _routes.begin();
-		 it != _routes.end(); it++) {
-		if (uri == (*it).first)
-			return (*it).second;
+	cout << uri << "\n";
+	std::vector<string> req = split(uri, '/');
+	std::vector<string> root;
+	for (std::map<string, Route *>::iterator rit = _routes.begin();
+		 rit != _routes.end(); rit++) {
+		root = split((*rit).first, '/');
+		std::vector<string>::iterator root_it = root.begin();
+
+		for (std::vector<string>::iterator it = req.begin();
+			 it < req.end(); it++) {
+			if (*it == "")
+				continue ;
+			cout << *it << " - " << *root_it << "\n";
+			if (*it != *(root_it++))
+				break;
+			if (root_it == root.end())
+				return ((*rit).second);
+		}
 	}
 	return this;
 }

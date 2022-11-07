@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
 #include <climits>
@@ -19,6 +20,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <map>
@@ -41,6 +43,7 @@ typedef std::vector<JSONNode *> JSONList;
 
 void *ft_memset(void *b, int c, size_t len);
 bool isInt(string str);
+std::vector<string> split(string str, char delim);
 
 #include "Nodes.hpp"
 #include "Token.hpp"

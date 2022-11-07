@@ -108,10 +108,13 @@ void Socket::refresh() {
 }
 
 void Socket::answer(int fd, string request) {
+	string uri = split(request, ' ').at(1);
+	cout << uri << "\n";
+
 	cout << request << "\n|===|===|===|\n";
 	std::stringstream answer;
 	answer << "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: ";
-	string uri = "docs/";
+
 	Route *route = _server->get_route(uri);
 	answer << route->getAutoindex(uri);
 	cout << answer.str() << "\n|===|===|===|\n";

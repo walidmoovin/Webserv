@@ -56,7 +56,11 @@ string Route::correctUri(string uri) {
 	string root = _root;
 
 	cout << "Correcting request: " << uri
-		 << "with root: " << root << "\n";
+		 << " with root: " << root << "\n";
+	int i = 0;
+	while (uri.at(i) == '/')
+		i++;
+	uri.erase(0, i);
 	while ((slash_pos = root.find('/')) > 0) {
 		ret << root.substr(0, slash_pos);
 		root.erase(0, slash_pos);
