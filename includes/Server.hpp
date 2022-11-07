@@ -3,13 +3,11 @@
 
 class Server : public Route {
 	string _name;
-	std::vector<Socket *> _sockets;
 	std::map<string, Route *> _routes;
-
   public:
+  std::vector<listen_t> _listens;
 	Server(JSONNode *server);
 	~Server();
-	void set_fds();
-	void refresh();
+  std::vector<Socket *> get_sockets(JSONNode *server);
 	Route *get_route(string uri);
 };

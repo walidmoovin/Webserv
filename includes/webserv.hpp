@@ -41,9 +41,15 @@ class JSONNode;
 typedef std::map<string, JSONNode *> JSONObject;
 typedef std::vector<JSONNode *> JSONList;
 
+typedef struct listen_s {
+  string ip;
+  int port;
+} listen_t;
+
 void *ft_memset(void *b, int c, size_t len);
 bool isInt(string str);
 std::vector<string> split(string str, char delim);
+listen_t get_listen_t(string listen);
 
 #include "Nodes.hpp"
 #include "Token.hpp"

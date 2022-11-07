@@ -1,16 +1,18 @@
 #include "webserv.hpp"
 
-Route::Route(JSONNode *datas) {
+Route::Route(string location, JSONNode *datas) : _location(location) {
 	JSONObject object = datas->obj();
-	if (object["root"])
-		_root = object["root"]->str();
-	if (object["return"])
-		_ret = object["return"]->str();
-	if (object["autoindex"])
-		_autoindex = object["autoindex"]->boo();
-	if (object["indexs"]) {
-		JSONList indexs = object["indexs"]->lst();
-		for (JSONList::iterator it = indexs.begin(); it < indexs.end(); it++) {
+	JSONNode *tmp;
+	if ((tmp = object["root"]))
+		_root = tmp->str();
+	if ((tmp = object["return"]))
+		_ret = tmp->str();
+	if ((tmp = object["autoindex"]))
+		_autoindex = tmp->boo();
+	if ((tmp = object["indexs"])) {
+		JSONList indexs = tmp->lst();
+		for (JSONList::iterator it = indexs.begin();
+			 it < indexs.end(); it++) {
 			_indexs.push_back((*it)->str());
 		}
 	}
@@ -18,6 +20,7 @@ Route::Route(JSONNode *datas) {
 
 Route::~Route(void) {}
 
+string Route::getLocation(void) {return _location; }
 string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
 std::vector<string> Route::getIndexs(void) { return _indexs; }
@@ -52,11 +55,30 @@ string Route::getAutoindex(string uri) {
 
 string Route::correctUri(string uri) {
 	std::stringstream ret;
-	int slash_pos;
-	string root = _root;
+	//int slash_pos;
+	//string root = _root;
+	//int i = 0;
+	std::vector<string>::iterator it;
+	std::vector<string>::iterator it2;
 
 	cout << "Correcting request: " << uri
-		 << " with root: " << root << "\n";
+		 << " with root: " << _root << "\n";
+	ret << _root;
+	std::vector<string> loc_split = split(_location, '/');
+	std::vector<string> uri_split = split(uri, '/');
+	it2 = uri_split.begin();
+	for (it = loc_split.begin(); it < loc_split.end(); it++) {
+		while (*it2 == "")
+			it2++;
+		while (*it == "")
+			it++;
+		it2++;
+	}
+
+	while (it2 < uri_split.end()) {
+		ret << "/" << *(it2++);
+	}
+	/*
 	int i = 0;
 	while (uri.at(i) == '/')
 		i++;
@@ -64,9 +86,12 @@ string Route::correctUri(string uri) {
 	while ((slash_pos = root.find('/')) > 0) {
 		ret << root.substr(0, slash_pos);
 		root.erase(0, slash_pos);
-		uri = uri.substr(uri.find('/'), uri.length());
+		if (uri.find('/'))
+			uri = uri.substr(uri.find('/'), uri.length());
 	}
 	ret << uri;
+	*/
 	cout << "resutlt: " << ret.str() << "\n";
 	return ret.str();
 }
+

@@ -27,3 +27,13 @@ std::vector<string> split(string str, char delim) {
     }
 	return tokens;
 }
+listen_t get_listen_t(string listen) {
+  listen_t ret;
+	size_t sep_pos = listen.rfind(':');
+
+	string tmp = listen.substr(0, sep_pos);
+	ret.ip = isInt(tmp) ? "0.0.0.0" : (tmp == "localhost" ? "127.0.0.1" : tmp);
+	tmp = listen.substr(sep_pos + 1, listen.length() - sep_pos - 1).c_str();
+	ret.port = !isInt(tmp) ? 80 : std::atoi(tmp.c_str());
+  return ret;
+}

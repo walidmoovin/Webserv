@@ -4,12 +4,12 @@
 	"servers": [
 		{
 			"server_name": "localhost",
-			"listens": ["80", "localhost:80", "localhost", "[::]:443"],
+			"listens": ["localhost:8080", "localhost"],
 			"return": "301 https://$host$uri"
 		},
 		{
 			"server_name": "localhost",
-			"listens": ["8080"],
+			"listens": ["192.168.62.61:8080"],
 			"root": "./public",
 			"indexs": ["index.html"],
 			"locations":
@@ -21,7 +21,8 @@
 				},
 				"img/": 
 				{
-					"root": "images/"
+					"root": "images/",
+					"autoindex": true
 				}
 
 			}
