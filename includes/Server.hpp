@@ -7,7 +7,8 @@ class Server : public Route {
   public:
   std::vector<listen_t> _listens;
 	Server(JSONNode *server);
-	~Server();
+	~Server(void);
   std::vector<Socket *> get_sockets(JSONNode *server);
 	Route *get_route(string uri);
+	string getName(void);
 };

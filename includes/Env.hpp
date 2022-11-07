@@ -7,7 +7,7 @@ class Env {
 
   public:
 	Env(JSONNode *conf);
-	void set_fds();
-	void refresh();
+	void set_fds(void);
+	void refresh(void);
   Server *choose_server(Socket *sock, string host);
 };

@@ -4,12 +4,12 @@
 Socket::Socket(listen_t listen) : _listen(listen) {
 	_clients_amount = 0;
 }
-Socket::~Socket() {
+Socket::~Socket(void) {
 	close(_master_socket);
 	cout << "Socket destroyed!\n";
 }
 
-int Socket::launch() {
+int Socket::launch(void) {
 	int opt = 1;
 	string ip = _listen.ip;
 	int port = _listen.port;
@@ -48,7 +48,7 @@ int Socket::launch() {
 	return (EXIT_SUCCESS);
 }
 
-void Socket::set_fds() {
+void Socket::set_fds(void) {
 	FD_SET(_master_socket, &_readfds);
 
 	for (std::vector<int>::iterator it = _clients.begin(); it < _clients.end();

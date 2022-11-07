@@ -14,9 +14,9 @@ class Socket {
 	static int _min_fd;
 	static int _amount;
 	Socket(listen_t listen);
-	~Socket();
-	int launch();
-	void set_fds();
+	~Socket(void);
+	int launch(void);
+	void set_fds(void);
 	void refresh(Env *env);
 	void answer(Env *env, int fd, string request);
 	void send_answer(int fd, string msg);

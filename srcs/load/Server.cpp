@@ -14,6 +14,10 @@ Server::Server(JSONNode *server) : Route("/", server) {
 	}
 }
 
+Server::~Server(void) { cout << "Server destroyed!\n"; }
+
+string Server::getName(void) { return _name; }
+
 std::vector<Socket *> Server::get_sockets(JSONNode *server) {
 	JSONObject datas = server->obj();
 	std::vector<Socket *> ret;
@@ -45,8 +49,6 @@ std::vector<Socket *> Server::get_sockets(JSONNode *server) {
 	}
 	return ret;
 }
-
-Server::~Server(void) { cout << "Server destroyed!\n"; }
 
 Route *Server::get_route(string uri) {
 	cout << uri << "\n";

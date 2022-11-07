@@ -11,8 +11,7 @@ Route::Route(string location, JSONNode *datas) : _location(location) {
 		_autoindex = tmp->boo();
 	if ((tmp = object["indexs"])) {
 		JSONList indexs = tmp->lst();
-		for (JSONList::iterator it = indexs.begin();
-			 it < indexs.end(); it++) {
+		for (JSONList::iterator it = indexs.begin(); it < indexs.end(); it++) {
 			_indexs.push_back((*it)->str());
 		}
 	}
@@ -20,7 +19,7 @@ Route::Route(string location, JSONNode *datas) : _location(location) {
 
 Route::~Route(void) {}
 
-string Route::getLocation(void) {return _location; }
+string Route::getLocation(void) { return _location; }
 string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
 std::vector<string> Route::getIndexs(void) { return _indexs; }
@@ -55,14 +54,13 @@ string Route::getAutoindex(string uri) {
 
 string Route::correctUri(string uri) {
 	std::stringstream ret;
-	//int slash_pos;
-	//string root = _root;
-	//int i = 0;
+	// int slash_pos;
+	// string root = _root;
+	// int i = 0;
 	std::vector<string>::iterator it;
 	std::vector<string>::iterator it2;
 
-	cout << "Correcting request: " << uri
-		 << " with root: " << _root << "\n";
+	cout << "Correcting request: " << uri << " with root: " << _root << "\n";
 	ret << _root;
 	std::vector<string> loc_split = split(_location, '/');
 	std::vector<string> uri_split = split(uri, '/');
@@ -94,4 +92,3 @@ string Route::correctUri(string uri) {
 	cout << "resutlt: " << ret.str() << "\n";
 	return ret.str();
 }
-
