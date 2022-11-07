@@ -24,18 +24,16 @@ string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
 std::vector<string> Route::getIndexs(void) { return _indexs; }
 
-string Route::getAutoindex(string uri) {
+string Route::getAutoindex(string path) {
 	if (!_autoindex)
-		return "4\n\n404!";
+		return "";
 	std::stringstream page;
-	std::stringstream ret;
-	string path = correctUri(uri);
 	DIR *dir;
 	struct dirent *entry;
 	struct stat info;
 
 	if ((dir = opendir(path.c_str())) == NULL)
-		ret << " 19\n\nFolder unaccesible.";
+		return "";
 	else {
 		page << path << " files :\n";
 		while ((entry = readdir(dir)) != NULL) {
@@ -48,15 +46,28 @@ string Route::getAutoindex(string uri) {
 		}
 		closedir(dir);
 	}
-	ret << page.str().length() << "\n\n" << page.str();
-	return ret.str();
+	return page.str();
+}
+
+string Route::read_file(string path) {
+	string str;
+	std::stringstream ret;
+	struct stat info;
+	if (stat(path.c_str(), &info) != 0) {
+		std::cerr << "stat() error on " << path << ": "
+			<< strerror(errno) << "\n";
+		return "";
+	}
+	std::ifstream file(path.c_str());
+	while (file) {
+		std::getline(file, str);
+		ret << str << "\n";
+	}
+	return (ret.str());
 }
 
 string Route::correctUri(string uri) {
 	std::stringstream ret;
-	// int slash_pos;
-	// string root = _root;
-	// int i = 0;
 	std::vector<string>::iterator it;
 	std::vector<string>::iterator it2;
 
@@ -76,19 +87,6 @@ string Route::correctUri(string uri) {
 	while (it2 < uri_split.end()) {
 		ret << "/" << *(it2++);
 	}
-	/*
-	int i = 0;
-	while (uri.at(i) == '/')
-		i++;
-	uri.erase(0, i);
-	while ((slash_pos = root.find('/')) > 0) {
-		ret << root.substr(0, slash_pos);
-		root.erase(0, slash_pos);
-		if (uri.find('/'))
-			uri = uri.substr(uri.find('/'), uri.length());
-	}
-	ret << uri;
-	*/
 	cout << "resutlt: " << ret.str() << "\n";
 	return ret.str();
 }

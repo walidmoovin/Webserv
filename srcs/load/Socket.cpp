@@ -1,9 +1,7 @@
 
 #include "webserv.hpp"
 
-Socket::Socket(listen_t listen) : _listen(listen) {
-	_clients_amount = 0;
-}
+Socket::Socket(listen_t listen) : _listen(listen) { _clients_amount = 0; }
 Socket::~Socket(void) {
 	close(_master_socket);
 	cout << "Socket destroyed!\n";
@@ -91,27 +89,46 @@ void Socket::refresh(Env *env) {
 				_clients.erase(it);
 			} else {
 				buffer[valread] = '\0';
-				answer(env, *it, buffer);
+				if (answer(env, *it, buffer) == EXIT_FAILURE) {
+					_clients.erase(it);
+					close(*it);
+				}
+
 			}
 		}
 	}
 }
 
-void Socket::answer(Env *env, int fd, string request) {
-	std::vector<string> lines = split(request, '\n');
-	string uri = split(lines.at(0), ' ').at(1);
-	cout << uri << "\n";
-
+int Socket::answer(Env *env, int fd, string request) {
 	cout << request << "\n|===|===|===|\n";
+	std::vector<string> lines = split(request, '\n');
+	std::vector<string> head = split(lines.at(0), ' ');
+	string uri;
+	if (head.size() < 2)
+		return EXIT_FAILURE;
+	uri = head.at(1);
+	cout << uri << "\n";
+	string ret;
+
 	std::stringstream answer;
 	answer << "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: ";
 
 	Server *server = env->choose_server(this, split(lines.at(1), ' ').at(1));
 	Route *route = server->get_route(uri);
-	cout << "Route find: " << route->getLocation() << "\n";
-	answer << route->getAutoindex(uri);
+	/*
+	cout << "Route find: " << route->getLocation() << "->" << route->getRoot() << "\n";
+	if ((ret = route->read_file(uri)) == "")
+		answer << route->getAutoindex(uri);
+	else
+		answer << ret;
+	*/
+	string path = route->correctUri(uri);
+	if ((ret = route->getAutoindex(path)) == "")
+		ret = route->read_file(path);
+	answer << ret.length() << "\n\n" << ret;
 	cout << answer.str() << "\n|===|===|===|\n";
 	send_answer(fd, answer.str());
+	return EXIT_SUCCESS;
 }
 
 void Socket::send_answer(int fd, string msg) {

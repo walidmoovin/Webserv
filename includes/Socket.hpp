@@ -18,6 +18,6 @@ class Socket {
 	int launch(void);
 	void set_fds(void);
 	void refresh(Env *env);
-	void answer(Env *env, int fd, string request);
+	int answer(Env *env, int fd, string request);
 	void send_answer(int fd, string msg);
 };

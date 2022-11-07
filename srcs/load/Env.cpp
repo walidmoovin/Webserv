@@ -25,14 +25,14 @@ Env::Env(JSONNode *conf) {
 Server *Env::choose_server(Socket *sock, string host) {
 	std::vector<Server *> exact;
 	std::vector<Server *> inrange;
-	std::vector<string> ip_list;
-	std::vector<string> ip_requ;
+	std::vector<string> ip_listen;
+	std::vector<string> ip_required;
 	// string ip = inet_ntoa(sock->_address.sin_addr);
 	// int port = ntohs(sock->_address.sin_port);
 
 	// cout << "Which server for " << ip << ":" << port << "?\n";
 	cout << "Socket: " << sock->_listen.ip << ":" << sock->_listen.port << "\n";
-	ip_requ = split(sock->_listen.ip, '.');
+	ip_required = split(sock->_listen.ip, '.');
 	for (std::vector<Server *>::iterator sit = _servers.begin();
 		 sit < _servers.end(); sit++) {
 
@@ -40,7 +40,6 @@ Server *Env::choose_server(Socket *sock, string host) {
 		for (std::vector<listen_t>::iterator it = serv_listens.begin();
 			 it < serv_listens.end(); it++) {
 
-			ip_list = split((*it).ip, '.');
 			if (sock->_listen.port != (*it).port)
 				continue;
 			if (sock->_listen.ip == (*it).ip) {
@@ -48,16 +47,15 @@ Server *Env::choose_server(Socket *sock, string host) {
 				continue;
 			}
 			bool is_inrange = true;
-			ip_list = split((*it).ip, '.');
-			std::vector<string>::iterator r = ip_requ.begin();
-			for (std::vector<string>::iterator l = ip_list.begin();
-				 l < ip_list.end(); l++) {
+			ip_listen = split((*it).ip, '.');
+			std::vector<string>::iterator r = ip_required.begin();
+			for (std::vector<string>::iterator l = ip_listen.begin();
+				 l < ip_listen.end(); l++) {
 				if (*l != *r && *l != "0")
 					is_inrange = false;
 			}
 			if (is_inrange == true)
 				inrange.push_back(*sit);
-			// else if (is_ip_into(sock->_listen.ip, (*it).ip))
 		}
 	}
 	if (exact.size() == 0) {
