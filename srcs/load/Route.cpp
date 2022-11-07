@@ -22,35 +22,44 @@ Route::~Route(void) {}
 string Route::getLocation(void) { return _location; }
 string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
-std::vector<string> Route::getIndexs(void) { return _indexs; }
+std::vector<string> Route::getIndexsLst(void) { return _indexs; }
 
-string Route::getAutoindex(string path) {
-	if (!_autoindex)
-		return "";
-	std::stringstream page;
+string Route::getIndex(string path) {
+	std::stringstream content;
+	std::stringstream ret;
 	DIR *dir;
 	struct dirent *entry;
 	struct stat info;
+	std::vector<string> indexs = getIndexsLst();
+	std::vector<string>::iterator it;
 
 	if ((dir = opendir(path.c_str())) == NULL)
 		return "";
 	else {
-		page << path << " files :\n";
+		content << path << " files :\n";
 		while ((entry = readdir(dir)) != NULL) {
 			if (entry->d_name[0] == '.')
 				continue;
-			page << "- " << entry->d_name << "\n";
+			for (it = indexs.begin(); it < indexs.end(); it++) {
+				if (entry->d_name == *it)
+					return (read_file(path + "/" + *it));
+			}
+			content << "- " << entry->d_name << "\n";
 			if (stat(path.c_str(), &info) != 0)
 				std::cerr << "stat() error on " << path << ": "
 						  << strerror(errno) << "\n";
 		}
 		closedir(dir);
 	}
-	return page.str();
+	ret << "Content-type: text/html \n";
+	ret << "Content-length: "<< content.str().length();
+	ret << "\n\n" << content;
+	return ret.str();
 }
 
 string Route::read_file(string path) {
 	string str;
+	string content;
 	std::stringstream ret;
 	struct stat info;
 	if (stat(path.c_str(), &info) != 0) {
@@ -61,8 +70,11 @@ string Route::read_file(string path) {
 	std::ifstream file(path.c_str());
 	while (file) {
 		std::getline(file, str);
-		ret << str << "\n";
+		content += str + "\n";
 	}
+	ret << "Content-type: " << getMime(path) << "\n";
+	ret << "Content-length: " << content.length();
+	ret << "\n\n" << content;
 	return (ret.str());
 }
 

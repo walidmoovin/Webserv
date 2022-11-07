@@ -15,8 +15,8 @@ class Route {
 	string getLocation(void);
 	string getRoot(void);
 	string getReturn(void);
-	std::vector<string> getIndexs(void);
-	string getAutoindex(string path);
+	std::vector<string> getIndexsLst(void);
+	string getIndex(string path);
 	string read_file(string path);
 	string correctUri(string uri);
 };

@@ -111,21 +111,14 @@ int Socket::answer(Env *env, int fd, string request) {
 	string ret;
 
 	std::stringstream answer;
-	answer << "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: ";
+	answer << "HTTP/1.1 200 OK\n";
 
 	Server *server = env->choose_server(this, split(lines.at(1), ' ').at(1));
 	Route *route = server->get_route(uri);
-	/*
-	cout << "Route find: " << route->getLocation() << "->" << route->getRoot() << "\n";
-	if ((ret = route->read_file(uri)) == "")
-		answer << route->getAutoindex(uri);
-	else
-		answer << ret;
-	*/
 	string path = route->correctUri(uri);
-	if ((ret = route->getAutoindex(path)) == "")
+	if ((ret = route->getIndex(path)) == "")
 		ret = route->read_file(path);
-	answer << ret.length() << "\n\n" << ret;
+	answer << ret;
 	cout << answer.str() << "\n|===|===|===|\n";
 	send_answer(fd, answer.str());
 	return EXIT_SUCCESS;
