@@ -19,4 +19,5 @@ class Route {
 	string getIndex(string path);
 	string read_file(string path);
 	string correctUri(string uri);
+	string getMime(string path);
 };
