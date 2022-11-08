@@ -2,10 +2,11 @@
 #include "webserv.hpp"
 
 class Socket {
-	int _master_socket;
-	int _clients_amount;
-	std::vector<int> _clients;
-
+	int _fd;
+	//int _clients_amount;
+	Socket *_parent;
+	std::vector<Socket *> _childs;
+	string _request;
   public:
 	struct sockaddr_in _address;
 	listen_t _listen;
@@ -14,10 +15,12 @@ class Socket {
 	static int _min_fd;
 	static int _amount;
 	Socket(listen_t listen);
+	Socket(int fd, Socket *parent);
 	~Socket(void);
 	int launch(void);
 	void set_fds(void);
 	void refresh(Env *env);
-	int answer(Env *env, int fd, string request);
-	void send_answer(int fd, string msg);
+	bool isRequestValid(string request);
+	int answer(Env *env, string request);
+	void send_answer(string msg);
 };

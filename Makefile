@@ -10,7 +10,7 @@ CXXFLAGS= -g -I includes -Werror -Wextra -Wall -std=c++98
 all : $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) -g  $(OBJS) -o $(NAME)
+	$(CXX) -g $(OBJS) -o $(NAME)
 
 clean:
 	rm -rf $(OBJS)
