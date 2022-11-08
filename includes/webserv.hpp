@@ -50,6 +50,8 @@ void *ft_memset(void *b, int c, size_t len);
 bool isInt(string str);
 std::vector<string> split(string str, char delim);
 listen_t get_listen_t(string listen);
+string getMime(string path);
+string read_file(string path);
 
 #include "Nodes.hpp"
 #include "Token.hpp"

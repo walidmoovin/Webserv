@@ -100,7 +100,7 @@ void Socket::refresh(Env *env) {
 }
 
 int Socket::answer(Env *env, int fd, string request) {
-	cout << request << "\n|===|===|===|\n";
+	cout << "|===|Request|===|\n"<< request << "\n|===|===|===|\n";
 	std::vector<string> lines = split(request, '\n');
 	std::vector<string> head = split(lines.at(0), ' ');
 	string uri;
@@ -111,15 +111,19 @@ int Socket::answer(Env *env, int fd, string request) {
 	string ret;
 
 	std::stringstream answer;
-	answer << "HTTP/1.1 200 OK\n";
+	answer << "HTTP/1.1";
 
 	Server *server = env->choose_server(this, split(lines.at(1), ' ').at(1));
 	Route *route = server->get_route(uri);
 	string path = route->correctUri(uri);
-	if ((ret = route->getIndex(path)) == "")
-		ret = route->read_file(path);
-	answer << ret;
-	cout << answer.str() << "\n|===|===|===|\n";
+	cout << "Path: " << path << "\n";
+	ret = route->getIndex(uri, path);
+	if (ret == "") {
+		cout << "No index: lf file\n";
+		ret = read_file(path);
+	}
+	answer << (ret == "" ? " 404 Not Found\nContent-length: 0\n\n" : " 200 OK\n") << ret;
+	cout << "|===|Answer|===|\n" << answer.str() << "\n|===|===|===|\n";
 	send_answer(fd, answer.str());
 	return EXIT_SUCCESS;
 }
