@@ -99,15 +99,15 @@ void Socket::refresh(Env *env) {
 	}
 }
 
-bool Socket::isRequestValid(string request) {
-	_request += request;
-	if (_request.length() < 1)
+bool Socket::waitHeader() {
+	if (_header.length() < 1)
 		return false;
-	std::vector<string> lines = split(_request, '\n');
+	std::vector<string> lines = split(header, '\r\n');
 	bool is_valid = false;
 	for (std::vector<string>::iterator it = lines.begin(); 
 			it < lines.end(); it++) {
-		if (*it == "\r" || *it == "") is_valid = true;
+		if (*it == "")
+			is_valid = true;
 	}
 	if (!is_valid || lines.at(0) == "")
 		return false;
@@ -115,14 +115,16 @@ bool Socket::isRequestValid(string request) {
 	if ((head.at(0) != "GET" && head.at(0) != "POST" && head.at(0) != "DELETE")
 		|| head.size() < 2)
 		return false;
+
 	return true;
 }
 
 int Socket::answer(Env *env, string request) {
-	cout << "|===|Request|===|\n"<< request << "\n|===|===|===|\n";
-	if (!isRequestValid(request)) {
+	tmp += request;
+	cout << "|===|request|===>"<< _request << "|===||\n";
+	if (_header == "") {
+		waitHeader();
 		cout << "Bad request recieved\n";
-		send_answer("HTTP/1.1 400 Bad Request\n\n");
 		return EXIT_FAILURE;
 	}
 	std::vector<string> lines = split(_request, '\n');
@@ -135,6 +137,15 @@ int Socket::answer(Env *env, string request) {
 
 	Server *server = env->choose_server(_parent, split(lines.at(1), ' ').at(1));
 	Route *route = server->get_route(uri);
+	std::vector<string> headers;
+	if ((headers = route->getHeadersLst()).size() > 0) {
+		if (std::find(headers.begin(), headers.end(), head.at(0)) == headers.end())
+			send_answer("HTTP/1.1 405 Method Not Allowed");
+	} else if ((headers = server->getHeadersLst()).size() > 0) {
+		if (std::find(headers.begin(), headers.end(), head.at(0)) == headers.end())
+			send_answer("HTTP/1.1 405 Method Not Allowed");
+	}
+
 	string path = route->correctUri(uri);
 	cout << "Path: " << path << "\n";
 	ret = route->getIndex(uri, path);
@@ -143,7 +154,7 @@ int Socket::answer(Env *env, string request) {
 		ret = read_file(path);
 	}
 	answer << (ret == "" ? " 404 Not Found\nContent-length: 0\n\n" : " 200 OK\n") << ret;
-	cout << "|===|Answer|===|\n" << answer.str() << "\n|===|===|===|\n";
+	cout << "|===|Answer|===>" << answer.str() << "|===||\n";
 	send_answer(answer.str());
 	_request = "";
 	return EXIT_SUCCESS;

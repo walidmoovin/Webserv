@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-Server::Server(JSONNode *server) : Route("/", server) {
+Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 	JSONObject datas = server->obj();
 	if (datas["server_name"])
 		_name = datas["server_name"]->str();
@@ -8,7 +8,7 @@ Server::Server(JSONNode *server) : Route("/", server) {
 		JSONObject locations = datas["locations"]->obj();
 		for (JSONObject::iterator it = locations.begin(); it != locations.end();
 			 it++) {
-			Route *route = new Route((*it).first, (*it).second);
+			Route *route = new Route(this, (*it).first, (*it).second);
 			_routes[(*it).first] = route;
 		}
 	}
