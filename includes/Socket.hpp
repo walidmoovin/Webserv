@@ -7,7 +7,7 @@ class Socket {
 	Socket *_parent;
 	std::vector<Socket *> _childs;
 	struct sockaddr_in _address;
-	string tmp;
+	string _tmp;
 	string _header;
 	string _content;
 	

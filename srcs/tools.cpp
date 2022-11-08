@@ -219,8 +219,8 @@ string read_file(string path) {
 		std::getline(file, str);
 		content += str + "\n";
 	}
-	ret << "Content-type: " << getMime(path) << "\n";
-	ret << "Content-length: " << content.length();
-	ret << "\n\n" << content;
+	ret << "Content-type: " << getMime(path) << "\r\n";
+	ret << "Content-length: " << content.length() << "\r\n";
+	ret << "\r\n" << content;
 	return (ret.str());
 }
