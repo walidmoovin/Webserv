@@ -32,7 +32,7 @@ string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
 std::vector<string> Route::getIndexsLst(void) { return _indexs; }
 std::vector<string> Route::getHeadersLst(void) { return _headers; }
-    
+
 string Route::getIndex(string uri, string path) {
 	std::stringstream content;
 	std::stringstream ret;
