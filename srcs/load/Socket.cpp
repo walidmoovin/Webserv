@@ -100,6 +100,10 @@ void Socket::refresh(Env *env) {
 }
 
 bool Socket::waitHeader() {
+	if (_header != "")
+		return true;
+	string header;
+	string content;
 	if (_tmp.length() < 1)
 		return false;
 	std::vector<string> lines = split(_tmp, '\n');
@@ -108,20 +112,25 @@ bool Socket::waitHeader() {
 		 it++) {
 		if (*it == "\r")
 			is_valid = true;
+		else if (!is_valid)
+			header += *it + "\n";
+		else
+			content += *it + "\n";
 	}
 	if (!is_valid)
 		return false;
-	_header = _tmp;
-	_tmp = "";
+	if (content.length() > 0)
+		content.at(content.length() - 1) = '\0';
+	_header = header;
+	_tmp = content;
 	return true;
 }
 
 int Socket::answer(Env *env, string request) {
 	_tmp += request;
 	cout << "|===|request|===>" << _tmp << "|===||\n";
-	if (_header == "") {
-		waitHeader();
-	}
+	if (!waitHeader())
+		return EXIT_FAILURE;
 	std::vector<string> lines = split(_header, '\n');
 	std::vector<string> head = split(lines.at(0), ' ');
 	string uri = head.at(1);
