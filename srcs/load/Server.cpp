@@ -51,7 +51,7 @@ std::vector<Socket *> Server::get_sockets(JSONNode *server) {
 }
 
 Route *Server::get_route(string uri) {
-	cout << uri << "\n";
+	// cout << uri << "\n";
 	std::vector<string> req = split(uri, '/');
 	std::vector<string> root;
 	for (std::map<string, Route *>::iterator rit = _routes.begin();

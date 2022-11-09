@@ -10,6 +10,10 @@ class Socket {
 	string _tmp;
 	string _header;
 	string _content;
+	string _method;
+	string _uri;
+	string _host;
+	string _extension;
 	
 	int answer(Env *env, string request);
 	void send_answer(string msg);

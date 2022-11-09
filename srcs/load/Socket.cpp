@@ -100,10 +100,6 @@ void Socket::refresh(Env *env) {
 }
 
 bool Socket::waitHeader() {
-	if (_header != "")
-		return true;
-	string header;
-	string content;
 	if (_tmp.length() < 1)
 		return false;
 	std::vector<string> lines = split(_tmp, '\n');
@@ -112,35 +108,36 @@ bool Socket::waitHeader() {
 		 it++) {
 		if (*it == "\r")
 			is_valid = true;
-		else if (!is_valid)
-			header += *it + "\n";
-		else
-			content += *it + "\n";
 	}
 	if (!is_valid)
 		return false;
-	if (content.length() > 0)
-		content.at(content.length() - 1) = '\0';
-	_header = header;
-	_tmp = content;
+	_header = _tmp;
+	_tmp = "";
 	return true;
 }
 
 int Socket::answer(Env *env, string request) {
 	_tmp += request;
 	cout << "|===|request|===>" << _tmp << "|===||\n";
-	if (!waitHeader())
-		return EXIT_FAILURE;
+	if (_header == "") {
+		waitHeader();
+	}
 	std::vector<string> lines = split(_header, '\n');
 	std::vector<string> head = split(lines.at(0), ' ');
-	string uri = head.at(1);
-	cout << uri << "\n";
+	this->_method = head.at(0);
+	this->_uri = head.at(1);
+	for (std::vector<string>::iterator it = lines.begin(); it < lines.end(); it++)
+		if (it->find("Host:") != string::npos)
+			this->_host = it->substr(6);
+	cout << "Method: " << this->_method << "\n";
+	cout << "URI: " << this->_uri << "\n";
+	cout << "Host: " << this->_host << "\n";
 	string ret;
 	std::stringstream answer;
 	answer << "HTTP/1.1";
 
 	Server *server = env->choose_server(_parent, split(lines.at(1), ' ').at(1));
-	Route *route = server->get_route(uri);
+	Route *route = server->get_route(this->_uri);
 	std::vector<string> headers;
 
 	if ((head.at(0) != "GET" && head.at(0) != "POST" &&
@@ -160,9 +157,9 @@ int Socket::answer(Env *env, string request) {
 				"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
 	}
 
-	string path = route->correctUri(uri);
+	string path = route->correctUri(this->_uri);
 	cout << "Path: " << path << "\n";
-	ret = route->getIndex(uri, path);
+	ret = route->getIndex(this->_uri, path);
 	if (ret == "") {
 		cout << "No index: lf file\n";
 		ret = read_file(path);
@@ -170,7 +167,7 @@ int Socket::answer(Env *env, string request) {
 	answer << (ret == "" ? " 404 Not Found\r\nContent-length: 0\r\n\r\n"
 						 : " 200 OK\r\n")
 		   << ret;
-	cout << "|===|Answer|===>" << answer.str() << "|===||\n";
+	cout << "|===|Answer|===|\n" << answer.str() << "|===|End of answer|===|\n";
 	send_answer(answer.str());
 	_content = "";
 	_header = "";
