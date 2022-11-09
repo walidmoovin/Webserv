@@ -7,15 +7,13 @@ class Socket {
 	Socket *_parent;
 	std::vector<Socket *> _childs;
 	struct sockaddr_in _address;
-	string _tmp;
 	string _header;
 	string _content;
-	string _method;
-	string _uri;
-	string _host;
-	string _extension;
+	std::map<string,std::vector<string> > _request;
 	
-	int answer(Env *env, string request);
+	bool getRequest(string paquet);
+	bool parseHeader();
+	int answer(Env *env);
 	void send_answer(string msg);
 	bool waitHeader();
   public:

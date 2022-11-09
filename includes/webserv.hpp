@@ -32,6 +32,11 @@ using std::cout;
 using std::strerror;
 using std::string;
 
+typedef struct listen_s {
+	string ip;
+	int port;
+} listen_t;
+
 class Env;
 class Server;
 class Socket;
@@ -40,11 +45,6 @@ class JSONNode;
 
 typedef std::map<string, JSONNode *> JSONObject;
 typedef std::vector<JSONNode *> JSONList;
-
-typedef struct listen_s {
-	string ip;
-	int port;
-} listen_t;
 
 void *ft_memset(void *b, int c, size_t len);
 bool isInt(string str);

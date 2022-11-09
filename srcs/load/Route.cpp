@@ -60,7 +60,7 @@ string Route::getIndex(string uri, string path) {
 				std::cerr << "stat() error on " << path << ": "
 						  << strerror(errno) << "\n";
 		}
-		content << "<ul>";
+		content << "</ul>";
 		closedir(dir);
 	}
 	if (!_autoindex)
@@ -76,15 +76,15 @@ string Route::correctUri(string uri) {
 	std::vector<string>::iterator it;
 	std::vector<string>::iterator it2;
 
-	// cout << "Correcting request: " << uri << " with root: " << _root << "\n";
-	ret << _root;
+	cout << "Correcting request: " << uri << " with root: " << _root << "\n";
+	ret << "./" << _root;
 	std::vector<string> loc_split = split(_location, '/');
 	std::vector<string> uri_split = split(uri, '/');
 	it2 = uri_split.begin();
 	for (it = loc_split.begin(); it < loc_split.end(); it++) {
-		while (*it2 == "")
+		while ( it2 < uri_split.end() && *it2 == "")
 			it2++;
-		while (*it == "")
+		while (it < loc_split.end() && *it == "")
 			it++;
 		if (it != loc_split.end())
 			it2++;
@@ -93,6 +93,7 @@ string Route::correctUri(string uri) {
 	while (it2 < uri_split.end()) {
 		ret << "/" << *(it2++);
 	}
-	// cout << "resutlt: " << ret.str() << "\n";
+	
+	cout << "result: " << ret.str() << "\n";
 	return ret.str();
 }

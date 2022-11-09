@@ -93,73 +93,83 @@ void Socket::refresh(Env *env) {
 				_childs.erase(it);
 			} else {
 				buffer[valread] = '\0';
-				(*it)->answer(env, buffer);
+				if ((*it)->getRequest(buffer))
+					(*it)->answer(env);
 			}
 		}
 	}
 }
 
-bool Socket::waitHeader() {
-	if (_tmp.length() < 1)
-		return false;
-	std::vector<string> lines = split(_tmp, '\n');
-	bool is_valid = false;
-	for (std::vector<string>::iterator it = lines.begin(); it < lines.end();
-		 it++) {
-		if (*it == "\r")
-			is_valid = true;
+bool Socket::parseHeader() {
+	std::vector<string> lines = split(_header, '\n');
+	std::vector<string> line;
+	if (lines.size() > 0) {
+		for (std::vector<string>::iterator it = lines.begin() + 1; it < lines.end(); it++) {
+			line = split(*it, ' ');
+			cout << line.at(0) << "scraped from header\n";
+			_request[line.at(0)] = std::vector<string>(line.begin() + 1, line.end());
+		}
 	}
-	if (!is_valid)
+	std::vector<string> method = split(lines.at(0), ' ');
+	if (method.at(0) == "POST" && _request.find("Content-Length:") == _request.end() && _request.find("Transfer-Encoding:") ==_request.end())
 		return false;
-	_header = _tmp;
-	_tmp = "";
+	_request["Method:"] = method;
 	return true;
 }
 
-int Socket::answer(Env *env, string request) {
-	_tmp += request;
-	cout << "|===|request|===>" << _tmp << "|===||\n";
-	if (_header == "") {
-		waitHeader();
+bool Socket::getRequest(string paquet) {
+	cout << "|===|paquet|===>" << paquet << "|===||\n";
+	if (paquet.length() < 1) //HTTPS?
+		return false;
+	std::vector<string> lines = split(paquet, '\n');
+	long chunk_len = (_content.length() > 0 && _request["Transfer-Encoding:"].size() && _request["Transfer-Encoding:"].at(0) == "chunked") ? std::strtol(lines.at(0).substr(1).c_str(), 0, 16) : -1;
+	cout << "Chunk length: " << chunk_len << "\n";
+	for (std::vector<string>::iterator it = lines.begin(); it < lines.end(); it++) {
+		if (*it == "\r" && _content.length() == 0)
+			this->parseHeader();
+		if (*it != "\r" && _content.length() == 0)
+			_header += *it + "\n";
+		else if (chunk_len == -1 || it != lines.begin())
+			_content += *it + "\n";
 	}
-	std::vector<string> lines = split(_header, '\n');
-	std::vector<string> head = split(lines.at(0), ' ');
-	this->_method = head.at(0);
-	this->_uri = head.at(1);
-	for (std::vector<string>::iterator it = lines.begin(); it < lines.end(); it++)
-		if (it->find("Host:") != string::npos)
-			this->_host = it->substr(6);
-	cout << "Method: " << this->_method << "\n";
-	cout << "URI: " << this->_uri << "\n";
-	cout << "Host: " << this->_host << "\n";
+	cout << "Header: \n-|" << _header << "|-\n";
+	cout << "Content: \n-|" << _content << "|-\n";
+	if (_content.length() > 0) {
+		_content.resize(_content.length() - 1);
+		if ( _request["Method:"].at(0) == "GET" || (chunk_len == 0 || std::strtoul(_request["Content-Length:"].at(0).c_str(), 0, 10) <= _content.length() ) ) {
+			cout << "Request received\n";
+			return true;
+		}
+	} else
+		_header.resize(_header.length() - 1);
+	return false;
+}
+
+int Socket::answer(Env *env) {
+	cout << "Method: " << _request["Method:"].at(0) << "\n";
+	cout << "URI: " << _request["Method:"].at(1) << "\n";
+	cout << "Host: " << _request["Host:"].at(0) << "\n";
 	string ret;
 	std::stringstream answer;
 	answer << "HTTP/1.1";
 
-	Server *server = env->choose_server(_parent, split(lines.at(1), ' ').at(1));
-	Route *route = server->get_route(this->_uri);
-	std::vector<string> headers;
-
-	if ((head.at(0) != "GET" && head.at(0) != "POST" &&
-		 head.at(0) != "DELETE") ||
-		head.size() < 2)
+	Server *server = env->choose_server(_parent, _request["Host:"].at(0));
+	Route *route = server->get_route(_request["Method:"].at(1));
+	string method = _request["Method:"].at(0);
+	std::vector<string> allowed;
+	if (method != "GET" && method != "POST" && method != "DELETE")
 		send_answer(
 			"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
-	else if ((headers = route->getHeadersLst()).size() > 0) {
-		if (std::find(headers.begin(), headers.end(), head.at(0)) ==
-			headers.end())
-			send_answer(
-				"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
-	} else if ((headers = server->getHeadersLst()).size() > 0) {
-		if (std::find(headers.begin(), headers.end(), head.at(0)) ==
-			headers.end())
-			send_answer(
-				"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
+	else if ((allowed = route->getHeadersLst()).size() > 0) {
+		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
+			send_answer("HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
+	} else if ((allowed = server->getHeadersLst()).size() > 0) {
+		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
+			send_answer("HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
 	}
-
-	string path = route->correctUri(this->_uri);
+	string path = route->correctUri(_request["Method:"].at(1));
 	cout << "Path: " << path << "\n";
-	ret = route->getIndex(this->_uri, path);
+	ret = route->getIndex(_request["Method:"].at(1), path);
 	if (ret == "") {
 		cout << "No index: lf file\n";
 		ret = read_file(path);
