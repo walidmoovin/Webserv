@@ -22,9 +22,8 @@ std::vector<string> split(string str, char delim) {
 	std::vector<std::string> tokens;
 	std::string token;
 	std::stringstream ss(str);
-	while (getline(ss, token, delim)) {
+	while (getline(ss, token, delim))
 		tokens.push_back(token);
-	}
 	return tokens;
 }
 
@@ -208,6 +207,13 @@ string getMime(string path) {
 		return ("video/x-msvideo");
 	else
 		return ("text/plain");
+}
+
+string get_extension(string str) {
+    int dot_pos = str.rfind('.');
+    string ret = str.substr(dot_pos);
+    cout << ret << "\n";
+    return ret;
 }
 
 string read_file(string path) {

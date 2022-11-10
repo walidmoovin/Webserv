@@ -23,6 +23,12 @@ Route::Route(Server *server, string location, JSONNode *datas)
 			_headers.push_back((*it)->str());
 		}
 	}
+	if ((tmp = object["cgi"])) {
+       JSONObject cgis = tmp->obj();
+        for (JSONObject::iterator it = cgis.begin(); it != cgis.end(); it++) {
+            _cgi[(*it).first] = (*it).second->str();
+        }
+    }
 }
 
 Route::~Route(void) {}

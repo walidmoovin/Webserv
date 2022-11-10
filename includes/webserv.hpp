@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <algorithm>
@@ -50,6 +51,7 @@ bool isInt(string str);
 std::vector<string> split(string str, char delim);
 listen_t get_listen_t(string listen);
 string getMime(string path);
+string get_extension(string str);
 string read_file(string path);
 
 #include "Nodes.hpp"

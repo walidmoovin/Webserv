@@ -216,29 +216,57 @@ int Socket::answer(Env *env) {
 	string method = _request["Method:"].at(0);
 	std::vector<string> allowed;
 	if (method != "GET" && method != "POST" && method != "DELETE")
-		send_answer(
-			"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
-	else if ((allowed = route->getHeadersLst()).size() > 0) {
+		send_answer("HTTP/1.1 405 Method Not Allowed\r\n\r\n");
+	else if ((allowed = route->_headers).size() > 0) {
 		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
-			send_answer(
-				"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
-	} else if ((allowed = server->getHeadersLst()).size() > 0) {
+			send_answer("HTTP/1.1 405 Method Not Allowed\r\n\r\n");
+	} else if ((allowed = server->_headers).size() > 0) {
 		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
-			send_answer(
-				"HTTP/1.1 405 Method Not Allowed\r\nContent-length: 0\r\n\r\n");
+			send_answer("HTTP/1.1 405 Method Not Allowed\r\n\r\n");
 	}
 
 	string path = route->correctUri(_request["Method:"].at(1));
 	cout << "Path: " << path << "\n";
-	ret = route->getIndex(_request["Method:"].at(1), path);
-	if (ret == "") {
-		cout << "No index: lf file\n";
-		ret = read_file(path);
-	}
-	answer << (ret == "" ? " 404 Not Found\r\nContent-length: 0\r\n\r\n"
-						 : " 200 OK\r\n")
-		   << ret;
-	cout << "|===|Answer|===|\n" << answer.str() << "|===|End of answer|===|\n";
+    string cgi;
+    if (route->_cgi.size())
+        cgi = route->_cgi[get_extension(path)];
+    cout << "Cgi:" << cgi << "\n";
+	if (cgi != "") {
+        int status;
+		int fd[2];
+		pipe(fd);
+        int pid = fork();
+		if (pid == 0) {
+            const char **args = new const char *[cgi.length() + path.length() + 2];
+            args[0] = cgi.c_str();
+            args[1] = path.c_str();
+            args[2] = NULL;
+            dup2(fd[1], STDOUT_FILENO);
+            close(fd[1]);
+            close(fd[0]);
+            execve(cgi.c_str(), (char **)args, NULL);
+		}	
+        close(fd[1]);
+        waitpid(pid, &status, 0);
+        cout << "Cgi finished\n";
+        char buffer[10000];
+        size_t len = read(fd[0], buffer, 10000);
+        buffer[len] = 0;
+        ret = string(buffer);
+        len = ret.length() - ret.find("\r\n\r\n") - 4; 
+	    answer << " 200 OK\r\nContent-length: " << len << "\r\n";
+	    answer << ret;
+	} else {
+        ret = route->getIndex(_request["Method:"].at(1), path);
+        if (ret == "") {
+            cout << "No index: lf file\n";
+            ret = read_file(path);
+        }
+        answer << (ret == "" ? " 404 Not Found\r\nContent-length: 0\r\n\r\n"
+                             : " 200 OK\r\n")
+               << ret;
+    }
+    cout << "|===|Answer|===|\n" << answer.str() << "|===|End of answer|===|\n";
 	send_answer(answer.str());
 	_content = "";
 	_header = "";
