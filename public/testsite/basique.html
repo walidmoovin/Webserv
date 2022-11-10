@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<<<<<<< HEAD
 <head>
 	<meta charset="utf-8">
 	<title>WOW</title>
@@ -20,4 +21,44 @@
 		});
 	</script>
 </body>
+=======
+
+<head>
+    <meta charset="utf-8">
+    <title>WOW</title>
+</head>
+
+<body>
+    <h1>CECI EST UN AVERTISSEMENT</h1>
+    <p>NE CLIQUEZ SURTOUT PAS SUR LE BOUTON CI-DESSOUS</p>
+    <button class="first"
+        style="height: 50px; font-size: 20px; background-color: rgb(0, 255, 85); color: white;">CLIQUEZ ICI POUR VOIR
+        VOTRE CADEAU</button>
+    <script>
+        const button1 = document.querySelector('button.first');
+        button1.addEventListener('click', function () {
+            alert('PRANK hahaha, cliquez sur le bouton en bas de la page pour voir le vrai cadeau');
+            document.querySelector('body').innerHTML = '<button class ="second" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; font-size: 20px; background-color: red; color: white;">CLIQUEZ ICI POUR VOIR VOTRE VRAI CADEAU</button>';
+            const button2 = document.querySelector('button.second');
+            button2.addEventListener('click', function () {
+                document.querySelector('body').innerHTML = '<img src="./sinj.gif" style="width: 100%; height: 100%;">';
+            });
+        });
+    </script>
+    <ul>
+        <li><a href="/docs/">Documentss</a></li>
+        <li><a href="/img/">Images</a></li>
+    </ul>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="text" name="description" value="form-data" />
+        <input type="file" name="myFile" />
+        <button type="submit">Submit</button>
+    </form>
+    <form action="/" method="post" enctype="application/x-www-form-urlencoded">
+        <input type="text" name="description" value="UrlEncode" />
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+>>>>>>> 5374275 (save 22-11-2)
 </html>
