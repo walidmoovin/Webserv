@@ -10,7 +10,6 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
-
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
@@ -56,7 +55,6 @@ string read_file(string path);
 #include "Nodes.hpp"
 #include "Token.hpp"
 #include "Parser.hpp"
-
 #include "Route.hpp"
 #include "Socket.hpp"
 #include "Server.hpp"
