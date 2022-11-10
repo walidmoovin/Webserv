@@ -6,6 +6,14 @@
 !default.json
 !.gitignore
 
+!public/
+!public/images/
+!public/images/*
+!public/testsite/
+!public/testsite/*
+!public/documents/
+!public/documents/*
+
 !includes/
 !includes/*.hpp
 

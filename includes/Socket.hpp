@@ -16,6 +16,7 @@ class Socket {
 	int answer(Env *env);
 	void send_answer(string msg);
 	bool waitHeader();
+    Server *choose_server(Env *env, string host);
   public:
 	Socket(listen_t listen);
 	Socket(int fd, Socket *parent);

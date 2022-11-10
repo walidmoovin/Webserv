@@ -1,5 +1,13 @@
 #include "webserv.hpp"
 
+
+/*|=======================|
+ * Server constructor:
+ * 
+ * Input: A server block node given by JSONParser.
+ * Output: A Server class object and also a Route one as Server herite from Route.
+ * The Route constructor scrap the routing informations (index, root, autoindex ...) and the Server one the others ones (server_name, sub-routes)
+ */
 Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 	JSONObject datas = server->obj();
 	if (datas["server_name"])
@@ -14,10 +22,17 @@ Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 	}
 }
 
-Server::~Server(void) { cout << "Server destroyed!\n"; }
 
+/* Get the server name (_server_name)*/
 string Server::getName(void) { return _name; }
 
+
+/*|=======================|
+ * Create server's defined sockets:
+ *
+ * Input: A server block node from JSONParser.
+ * Output: A vector containing all the succesfull created sockets using listens from the server block.
+ */
 std::vector<Socket *> Server::get_sockets(JSONNode *server) {
 	JSONObject datas = server->obj();
 	std::vector<Socket *> ret;
@@ -50,7 +65,13 @@ std::vector<Socket *> Server::get_sockets(JSONNode *server) {
 	return ret;
 }
 
-Route *Server::get_route(string uri) {
+/*|=======================|
+ * Choose the route an uri asked to the server must lead to.
+ *
+ * Intput: The uri asked by the client to the server.
+ * Output: The route object choosen or the server itself if no location block is adapted.
+ */
+Route *Server::choose_route(string uri) {
 	// cout << uri << "\n";
 	std::vector<string> req = split(uri, '/');
 	std::vector<string> root;
@@ -71,4 +92,18 @@ Route *Server::get_route(string uri) {
 		}
 	}
 	return this;
+}
+
+
+/*|=======================|
+* Server destructor:
+*
+* delete all routes owned by the server;
+*/
+
+Server::~Server(void) {
+	for (std::map<string, Route *>::iterator it = _routes.begin();
+		 it != _routes.end(); it++)
+		delete (*it).second;
+	cout << "Server destroyed!\n";
 }

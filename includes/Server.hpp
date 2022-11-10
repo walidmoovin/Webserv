@@ -9,6 +9,6 @@ class Server : public Route {
 	Server(JSONNode *server);
 	~Server(void);
   std::vector<Socket *> get_sockets(JSONNode *server);
-	Route *get_route(string uri);
+	Route *choose_route(string uri);
 	string getName(void);
 };
