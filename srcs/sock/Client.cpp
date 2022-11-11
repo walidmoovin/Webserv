@@ -156,10 +156,14 @@ void Client::send_cgi(string cgi, string path) {
 		args[0] = cgi.c_str();
 		args[1] = path.c_str();
 		args[2] = NULL;
+		string		 path_info = "PATH_INFO=" + _route->getRoot();
+		const char **env = new const char *[path_info.length() + 1];
+		env[0] = path_info.c_str();
+		env[1] = NULL;
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[1]);
 		close(fd[0]);
-		execve(cgi.c_str(), (char **)args, NULL);
+		execve(cgi.c_str(), (char **)args, (char **)env);
 	}
 	close(fd[1]);
 	waitpid(pid, &status, 0);
