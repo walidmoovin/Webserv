@@ -16,13 +16,10 @@ class Route {
 
 	Route(Server *server, string location, JSONNode *datas);
 	~Route(void);
-	string				  getLocation(void);
-	string				  getRoot(void);
-	string				  getReturn(void);
-	std::vector< string > getIndexsLst(void);
-	std::vector< string > getHeadersLst(void);
-	Server				 *getServer(void);
-	string				  getIndex(string uri, string path);
-	string				  correctUri(string uri);
-	friend class Socket;
+	string	getLocation(void);
+	string	getRoot(void);
+	string	getReturn(void);
+	Server *getServer(void);
+	string	getIndex(string uri, string path);
+	string	correctUri(string uri);
 };

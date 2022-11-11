@@ -33,11 +33,9 @@ Route::Route(Server *server, string location, JSONNode *datas)
 
 Route::~Route(void) {}
 
-string				  Route::getLocation(void) { return _location; }
-string				  Route::getRoot(void) { return _root; }
-string				  Route::getReturn(void) { return _ret; }
-std::vector< string > Route::getIndexsLst(void) { return _indexs; }
-std::vector< string > Route::getHeadersLst(void) { return _headers; }
+string Route::getLocation(void) { return _location; }
+string Route::getRoot(void) { return _root; }
+string Route::getReturn(void) { return _ret; }
 
 string Route::getIndex(string uri, string path) {
 	std::stringstream				content;
@@ -45,7 +43,6 @@ string Route::getIndex(string uri, string path) {
 	DIR							   *dir;
 	struct dirent				   *entry;
 	struct stat						info;
-	std::vector< string >			indexs = getIndexsLst();
 	std::vector< string >::iterator it;
 
 	if ((dir = opendir(path.c_str())) == NULL)
@@ -56,7 +53,7 @@ string Route::getIndex(string uri, string path) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (entry->d_name[0] == '.')
 				continue;
-			for (it = indexs.begin(); it < indexs.end(); it++) {
+			for (it = _indexs.begin(); it < _indexs.end(); it++) {
 				if (entry->d_name == *it)
 					return (read_file(path + "/" + *it));
 			}

@@ -80,21 +80,29 @@ bool Client::check_method(Server *server, Route *route, string method) {
 	return (false);
 }
 
+string Client::header_pick(string key, int id) {
+	if (_request[key].size() == 0)
+		throw std::runtime_error("The key is not in request's header.");
+	string ret = _request[key].at(id);
+	return ret;
+}
+
 void Client::answer(Env *env) {
-	cout << "Method: " << _request["Method:"].at(0) << "\n";
-	cout << "URI: " << _request["Method:"].at(1) << "\n";
-	cout << "Host: " << _request["Host:"].at(0) << "\n";
+	string method = header_pick("Method:", 0);
+	string uri = header_pick("Method:", 1);
+	string host = header_pick("Method:", 0);
+	cout << "Method: " << method << "\n";
+	cout << "URI: " << uri << "\n";
+	cout << "Host: " << host << "\n";
 	string ret;
 
-	Server *server = _parent->choose_server(env, _request["Host:"].at(0));
-	Route  *route = server->choose_route(_request["Method:"].at(1));
-	string	method = _request["Method:"].at(0);
+	Server *server = _parent->choose_server(env, host);
+	Route  *route = server->choose_route(uri);
 	if (check_method(server, route, method)) {
-		string path = route->correctUri(_request["Method:"].at(1));
+		string path = route->correctUri(uri);
 		string cgi = route->_cgi.size() ? route->_cgi[get_extension(path)] : "";
 		if (cgi == "") {
-			if ((ret = route->getIndex(_request["Method:"].at(1), path)) ==
-					"" &&
+			if ((ret = route->getIndex(uri, path)) == "" &&
 				(ret = read_file(path)) == "")
 				send_error(404);
 			else

@@ -13,12 +13,13 @@ class Client {
   public:
 	Client(int fd, Master *parent);
 	~Client(void);
-	bool getRequest(string paquet);
-	bool parseHeader();
-	void answer(Env *env);
-	bool check_method(Server *server, Route *route, string method);
-	void send_cgi(string cgi, string path);
-	void send_error(int error_code);
-	void send_answer(string msg);
+	bool   getRequest(string paquet);
+	bool   parseHeader();
+	string header_pick(string key, int id);
+	void   answer(Env *env);
+	bool   check_method(Server *server, Route *route, string method);
+	void   send_cgi(string cgi, string path);
+	void   send_error(int error_code);
+	void   send_answer(string msg);
 	friend class Master;
 };
