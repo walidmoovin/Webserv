@@ -25,6 +25,7 @@ Env::~Env() {
  */
 Env::Env(JSONNode *conf) {
 	try {
+
 		JSONList servers = conf->obj()["servers"]->lst();
 		for (std::vector< JSONNode * >::iterator it = servers.begin();
 			 it < servers.end(); it++) {

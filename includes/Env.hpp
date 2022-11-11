@@ -5,6 +5,7 @@ class Env {
   public:
 	std::vector< Server * > _servers;
 	std::vector< Master * > _masters;
+
 	Env(JSONNode *conf);
 	void cycle(void);
 	void set_fds(void);

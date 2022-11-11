@@ -13,6 +13,7 @@ class Route {
 	std::vector< string >	   _indexs;
 	std::vector< string >	   _headers;
 	std::map< string, string > _cgi;
+	int						   _client_max_body_size;
 
 	Route(Server *server, string location, JSONNode *datas);
 	~Route(void);

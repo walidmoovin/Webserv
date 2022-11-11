@@ -6,7 +6,7 @@ class Server : public Route {
 	std::map< string, Route * > _routes;
 
   public:
-	std::vector< listen_t > _listens;
+	std::vector< ip_port_t > _listens;
 	Server(JSONNode *server);
 	~Server(void);
 	Master				   *create_master(string str);

@@ -7,7 +7,7 @@ class Master {
 	struct sockaddr_in		_address;
 
   public:
-	Master(listen_t listen);
+	Master(ip_port_t listen);
 	Master(int fd, Master *parent);
 	~Master(void);
 
@@ -15,7 +15,7 @@ class Master {
 	void	refresh(Env *env);
 	Server *choose_server(Env *env, string host);
 
-	listen_t	  _listen;
+	ip_port_t	  _listen;
 	static fd_set _readfds;
 	static int	  _max_fd;
 	static int	  _min_fd;

@@ -33,11 +33,11 @@ using std::cout;
 using std::strerror;
 using std::string;
 
-typedef struct listen_s {
+typedef struct ip_port_s {
 	int	   fd;
 	string ip;
 	int	   port;
-} listen_t;
+} ip_port_t;
 
 class JSONNode;
 class Env;
@@ -52,8 +52,8 @@ typedef std::vector< JSONNode * >	   JSONList;
 void				 *ft_memset(void *b, int c, size_t len);
 bool				  isInt(string str);
 std::vector< string > split(string str, string delim);
-listen_t			  get_listen_t(string listen);
-listen_t			  get_listen_t(string ip, int port);
+ip_port_t			  get_ip_port_t(string listen);
+ip_port_t			  get_ip_port_t(string ip, int port);
 string				  getMime(string path);
 string				  read_file(string path);
 

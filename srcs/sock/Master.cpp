@@ -10,12 +10,12 @@ Master::~Master(void) {
  * Try to create a socket listening to ip and port defined by input.
  * If the creation success, the socket is then ready to select for new clients.
  *
- * Input: A listen_t structure which contain the ip and the port the master care
- * about.
+ * Input: A ip_port_t structure which contain the ip and the port the master
+ * care about.
  * Output: A Master object.
  */
 
-Master::Master(listen_t list) : _listen(list) {
+Master::Master(ip_port_t list) : _listen(list) {
 	int	   opt = 1;
 	string ip = _listen.ip;
 	int	   port = _listen.port;
@@ -78,8 +78,8 @@ void Master::refresh(Env *env) {
 #ifdef __APPLE__
 		fcntl(new_socket, F_SETFL, O_NONBLOCK);
 #endif
-		listen_t cli_listen = get_listen_t(inet_ntoa(_address.sin_addr),
-										   ntohs(_address.sin_port));
+		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr),
+											 ntohs(_address.sin_port));
 		_childs.push_back(new Client(new_socket, cli_listen, this));
 	}
 	int child_fd;
@@ -94,11 +94,28 @@ void Master::refresh(Env *env) {
 							(socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
-			} else if ((*it)->getRequest(buffer))
-				(*it)->answer(env);
+			} else {
+				if ((*it)->getRequest(env, buffer))
+					(*it)->answer();
+			}
 		}
 	}
 }
+/* |==========|
+ * Choose the server which must handle a request
+ * Each server can listen multiple range_ip:port and each range_ip:port can be
+ * listen by multiple servers. So for each request, we must look at the socket
+ * which given us the client to know how the client came. If multiple servers
+ * listen the range from where the client came, ones with exact correspondance
+ * are prefered.
+ *
+ * If there are multiples servers listening exactly the ip the client try to
+ * reach or whic listen a range which contain it, the first one which have the
+ * same server_name as the host the client used to reach server is used, else
+ * it's the first one of exact correspondance or first one which have the ip
+ * requested in his listen range.
+ *
+ */
 
 Server *Master::choose_server(Env *env, string host) {
 	std::vector< Server * > exact;
@@ -110,8 +127,8 @@ Server *Master::choose_server(Env *env, string host) {
 	for (std::vector< Server * >::iterator sit = env->_servers.begin();
 		 sit < env->_servers.end(); sit++) {
 
-		std::vector< listen_t > serv_listens = (*sit)->_listens;
-		for (std::vector< listen_t >::iterator it = serv_listens.begin();
+		std::vector< ip_port_t > serv_listens = (*sit)->_listens;
+		for (std::vector< ip_port_t >::iterator it = serv_listens.begin();
 			 it < serv_listens.end(); it++) {
 
 			if (_listen.port != (*it).port)

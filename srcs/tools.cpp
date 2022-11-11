@@ -33,10 +33,10 @@ std::vector< string > split(string str, string delim) {
 	return tokens;
 }
 
-listen_t get_listen_t(string listen) {
-	listen_t ret;
-	size_t	 sep_pos = listen.rfind(':');
-	string	 tmp = listen.substr(0, sep_pos);
+ip_port_t get_ip_port_t(string listen) {
+	ip_port_t ret;
+	size_t	  sep_pos = listen.rfind(':');
+	string	  tmp = listen.substr(0, sep_pos);
 
 	ret.ip = isInt(tmp) ? "0.0.0.0" : (tmp == "localhost" ? "127.0.0.1" : tmp);
 	tmp = listen.substr(sep_pos + 1, listen.length() - sep_pos - 1).c_str();
@@ -44,8 +44,8 @@ listen_t get_listen_t(string listen) {
 	return ret;
 }
 
-listen_t get_listen_t(string ip, int port) {
-	listen_t ret;
+ip_port_t get_ip_port_t(string ip, int port) {
+	ip_port_t ret;
 	ret.ip = ip;
 	ret.port = port;
 	return ret;

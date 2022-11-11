@@ -45,7 +45,7 @@ string Server::getName(void) { return _name; }
  */
 
 Master *Server::create_master(string str) {
-	listen_t listen = get_listen_t(str);
+	ip_port_t listen = get_ip_port_t(str);
 	if (listen.ip.at(0) == '[') {
 		cout << "Listen: IPv6 isn't supported\n";
 	}
@@ -69,7 +69,7 @@ Master *Server::create_master(string str) {
 std::vector< Master * > Server::get_sockets(JSONNode *server) {
 	JSONObject				datas = server->obj();
 	std::vector< Master * > ret;
-	listen_t				listen;
+	ip_port_t				listen;
 	Master				   *tmp;
 	if (datas["listens"]) {
 		JSONList listens = datas["listens"]->lst();
@@ -99,10 +99,12 @@ Route *Server::choose_route(string uri) {
 		std::vector< string >::iterator root_it = root.begin();
 		for (std::vector< string >::iterator it = req.begin(); it < req.end();
 			 it++) {
-			if (*it == "")
-				continue;
+			while (it != req.end() && *it == "")
+				it++;
 			if (*it != *(root_it++))
 				break;
+			while (root_it != root.end() && *root_it == "")
+				root_it++;
 			if (root_it == root.end())
 				return ((*rit).second);
 		}

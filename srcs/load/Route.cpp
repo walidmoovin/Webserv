@@ -39,6 +39,8 @@ Route::Route(Server *server, string location, JSONNode *datas)
 			_cgi[(*it).first] = (*it).second->str();
 		}
 	}
+	if ((tmp = object["client_max_body_size"]))
+		_client_max_body_size = tmp->nbr();
 }
 /* Route destructor */
 
@@ -62,6 +64,7 @@ string Route::getIndex(string uri, string path) {
 	struct dirent				   *entry;
 	struct stat						info;
 	std::vector< string >::iterator it;
+	cout << "get index(): path=" << path << "\n";
 
 	if ((dir = opendir(path.c_str())) == NULL)
 		return "";
