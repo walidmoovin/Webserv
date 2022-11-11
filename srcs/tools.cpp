@@ -39,6 +39,13 @@ listen_t get_listen_t(string listen) {
 	return ret;
 }
 
+listen_t get_listen_t(string ip, int port) {
+	listen_t ret;
+	ret.ip = ip;
+	ret.port = port;
+	return ret;
+}
+
 string getMime(string path) {
 	size_t pos = path.rfind('.');
 	string extension = (pos == string::npos) ? "txt" : path.substr(pos + 1);
@@ -208,13 +215,6 @@ string getMime(string path) {
 		return ("video/x-msvideo");
 	else
 		return ("text/plain");
-}
-
-string get_extension(string str) {
-	int	   dot_pos = str.rfind('.');
-	string ret = str.substr(dot_pos);
-	cout << ret << "\n";
-	return ret;
 }
 
 string read_file(string path) {

@@ -79,7 +79,6 @@ string Route::correctUri(string uri) {
 	std::vector< string >::iterator it;
 	std::vector< string >::iterator it2;
 
-	cout << "Correcting request: " << uri << " with root: " << _root << "\n";
 	ret << "./" << _root;
 	std::vector< string > loc_split = split(_location, '/');
 	std::vector< string > uri_split = split(uri, '/');
@@ -96,7 +95,5 @@ string Route::correctUri(string uri) {
 	while (it2 < uri_split.end()) {
 		ret << "/" << *(it2++);
 	}
-
-	cout << "result: " << ret.str() << "\n";
 	return ret.str();
 }

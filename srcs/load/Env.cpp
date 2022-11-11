@@ -1,6 +1,22 @@
 #include "webserv.hpp"
 
 /*|=======================|
+ * Environment destructor:
+ *
+ * The destructor call all servers and sockets destructors.
+ */
+Env::~Env() {
+	for (std::vector< Server * >::iterator it = _servers.begin();
+		 it < _servers.end(); it++) {
+		delete *it;
+	}
+	for (std::vector< Master * >::iterator it = _masters.begin();
+		 it < _masters.end(); it++) {
+		delete *it;
+	}
+}
+
+/*|=======================|
  * Environment constructor:
  *
  * Input: The JSONParser output
@@ -18,10 +34,11 @@ Env::Env(JSONNode *conf) {
 			_masters.insert(_masters.end(), tmp_s.begin(), tmp_s.end());
 		}
 	} catch (std::exception &e) {
-		cout << e.what();
+		std::cerr << e.what() << "\n";
 	}
 	delete conf;
 }
+
 void Env::cycle(void) {
 	FD_ZERO(&Master::_readfds);
 	Master::_max_fd = Master::_min_fd;
@@ -31,10 +48,11 @@ void Env::cycle(void) {
 	int activity = select(Master::_max_fd + Master::_amount,
 						  &(Master::_readfds), NULL, NULL, NULL);
 	if ((activity < 0) && (errno != EINTR))
-		cout << "Select: " << strerror(errno) << "\n";
+		std::cerr << "Select: " << strerror(errno) << "\n";
 	cout << "==> Handle requests and answers:\n";
 	refresh();
 }
+
 /*|=======================|
  * Append each master_sockets and their clients to list of fds SELECT must look
  * at.
@@ -54,21 +72,9 @@ void Env::set_fds(void) {
 void Env::refresh(void) {
 	for (std::vector< Master * >::iterator it = _masters.begin();
 		 it < _masters.end(); it++)
-		(*it)->refresh(this);
-}
-
-/*|=======================|
- * Environment destructor:
- *
- * The destructor call all servers and sockets destructors.
- */
-Env::~Env() {
-	for (std::vector< Server * >::iterator it = _servers.begin();
-		 it < _servers.end(); it++) {
-		delete *it;
-	}
-	for (std::vector< Master * >::iterator it = _masters.begin();
-		 it < _masters.end(); it++) {
-		delete *it;
-	}
+		try {
+			(*it)->refresh(this);
+		} catch (std::exception &e) {
+			std::cerr << e.what();
+		}
 }

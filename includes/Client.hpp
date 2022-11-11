@@ -5,13 +5,14 @@ typedef std::map< string, std::vector< string > > request_t;
 
 class Client {
 	int		  _fd;
+	listen_t  _listen;
 	Master	 *_parent;
 	string	  _header;
 	string	  _content;
 	request_t _request;
 
   public:
-	Client(int fd, Master *parent);
+	Client(int fd, listen_t listen, Master *parent);
 	~Client(void);
 	bool   getRequest(string paquet);
 	bool   parseHeader();

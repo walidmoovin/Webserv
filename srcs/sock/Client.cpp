@@ -1,9 +1,14 @@
 #include "webserv.hpp"
 
-Client::Client(int fd, Master *parent) : _fd(fd), _parent(parent) {}
+Client::Client(int fd, listen_t listen, Master *parent)
+	: _fd(fd), _listen(listen), _parent(parent) {
+	cout << "New connection, socket fd is " << fd << ", ip is : " << _listen.ip
+		 << ", port : " << _listen.port << "\n";
+}
 Client::~Client(void) {
 	close(_fd);
-	cout << "Destroyed client socket\n";
+	cout << "Host disconnected, ip " << _listen.ip << ", port " << _listen.port
+		 << "\n";
 }
 
 bool Client::getRequest(string paquet) {
@@ -86,6 +91,8 @@ string Client::header_pick(string key, int id) {
 	string ret = _request[key].at(id);
 	return ret;
 }
+
+inline string get_extension(string str) { return str.substr(str.rfind('.')); }
 
 void Client::answer(Env *env) {
 	string method = header_pick("Method:", 0);

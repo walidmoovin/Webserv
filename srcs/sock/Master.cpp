@@ -25,11 +25,11 @@ Master::Master(listen_t list) : _listen(list) {
 
 	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)
 		throw std::runtime_error("bind() error: " + string(strerror(errno)));
-	cout << "Listener " << ip << " on port " << port << "\n";
 
 	if (listen(_fd, 3) < 0)
 		throw std::runtime_error("listen() error: " + string(strerror(errno)));
-	cout << "Master: " << _fd << "\n";
+	cout << "New master socket with fd " << _fd << " which listen " << ip << ":"
+		 << port << "\n";
 	if (_fd < _min_fd)
 		_min_fd = _fd;
 	_amount++;
@@ -55,18 +55,15 @@ void Master::refresh(Env *env) {
 	if (FD_ISSET(_fd, &_readfds)) {
 		int new_socket =
 			accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
-		if (new_socket < 0) {
-			cout << "Accept: " << strerror(errno) << "\n";
-			exit(EXIT_FAILURE);
-		}
+		if (new_socket < 0)
+			throw std::runtime_error("accept() error:" +
+									 string(strerror(errno)));
 #ifdef __APPLE__
-		// fcntl(new_socket, F_GETNOSIGPIPE);
 		fcntl(new_socket, F_SETFL, O_NONBLOCK);
 #endif
-		cout << "New connection, socket fd is " << new_socket
-			 << ", ip is : " << inet_ntoa(_address.sin_addr)
-			 << ", port : " << ntohs(_address.sin_port) << "\n";
-		_childs.push_back(new Client(new_socket, this));
+		listen_t cli_listen = get_listen_t(inet_ntoa(_address.sin_addr),
+										   ntohs(_address.sin_port));
+		_childs.push_back(new Client(new_socket, cli_listen, this));
 	}
 	int child_fd;
 	for (std::vector< Client * >::iterator it = _childs.begin();
@@ -74,18 +71,14 @@ void Master::refresh(Env *env) {
 		child_fd = (*it)->_fd;
 		if (FD_ISSET(child_fd, &_readfds)) {
 			valread = read(child_fd, buffer, 10000);
+			buffer[valread] = '\0';
 			if (valread == 0) {
 				getpeername(child_fd, (struct sockaddr *)&_address,
 							(socklen_t *)&addrlen);
-				cout << "Host disconnected, ip " << inet_ntoa(_address.sin_addr)
-					 << ", port " << ntohs(_address.sin_port) << "\n";
 				delete (*it);
 				_childs.erase(it);
-			} else {
-				buffer[valread] = '\0';
-				if ((*it)->getRequest(buffer))
-					(*it)->answer(env);
-			}
+			} else if ((*it)->getRequest(buffer))
+				(*it)->answer(env);
 		}
 	}
 }

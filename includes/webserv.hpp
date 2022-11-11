@@ -34,6 +34,7 @@ using std::strerror;
 using std::string;
 
 typedef struct listen_s {
+	int	   fd;
 	string ip;
 	int	   port;
 } listen_t;
@@ -52,8 +53,8 @@ void				 *ft_memset(void *b, int c, size_t len);
 bool				  isInt(string str);
 std::vector< string > split(string str, char delim);
 listen_t			  get_listen_t(string listen);
+listen_t			  get_listen_t(string ip, int port);
 string				  getMime(string path);
-string				  get_extension(string str);
 string				  read_file(string path);
 
 #include "Client.hpp"
