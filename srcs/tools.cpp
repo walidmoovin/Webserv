@@ -18,13 +18,18 @@ bool isInt(string str) {
 	return true;
 }
 
-std::vector< string > split(string str, char delim) {
-	std::vector< std::string > tokens;
+std::vector< string > split(string str, string delim) {
+	string					   temp(str);
 	string					   token;
-	std::stringstream		   ss(str);
+	size_t					   pos;
+	std::vector< std::string > tokens;
 
-	while (getline(ss, token, delim))
+	while ((pos = temp.find(delim)) != string::npos) {
+		token = temp.substr(0, pos);
 		tokens.push_back(token);
+		temp.erase(0, pos + delim.length());
+	}
+	tokens.push_back(temp);
 	return tokens;
 }
 

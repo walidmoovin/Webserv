@@ -51,7 +51,7 @@ typedef std::vector< JSONNode * >	   JSONList;
 
 void				 *ft_memset(void *b, int c, size_t len);
 bool				  isInt(string str);
-std::vector< string > split(string str, char delim);
+std::vector< string > split(string str, string delim);
 listen_t			  get_listen_t(string listen);
 listen_t			  get_listen_t(string ip, int port);
 string				  getMime(string path);

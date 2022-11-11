@@ -15,7 +15,7 @@ bool Client::getRequest(string paquet) {
 	cout << "|===|paquet|===>" << paquet << "|===||\n";
 	if (paquet.length() < 1) // HTTPS?
 		return false;
-	std::vector< string > lines = split(paquet, '\n');
+	std::vector< string > lines = split(paquet, "\n");
 	long				  chunk_len =
 		 (_content.length() > 0 && _request["Transfer-Encoding:"].size() &&
 		  _request["Transfer-Encoding:"].at(0) == "chunked")
@@ -48,17 +48,17 @@ bool Client::getRequest(string paquet) {
 }
 
 bool Client::parseHeader() {
-	std::vector< string > lines = split(_header, '\n');
+	std::vector< string > lines = split(_header, "\r\n");
 	std::vector< string > line;
 	if (lines.size() > 0) {
 		for (std::vector< string >::iterator it = lines.begin() + 1;
 			 it < lines.end(); it++) {
-			line = split(*it, ' ');
+			line = split(*it, " ");
 			_request[line.at(0)] =
 				std::vector< string >(line.begin() + 1, line.end());
 		}
 	}
-	std::vector< string > method = split(lines.at(0), ' ');
+	std::vector< string > method = split(lines.at(0), " ");
 	if (method.at(0) == "POST" &&
 		_request.find("Content-Length:") == _request.end() &&
 		_request.find("Transfer-Encoding:") == _request.end())

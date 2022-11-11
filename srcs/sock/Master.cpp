@@ -106,8 +106,7 @@ Server *Master::choose_server(Env *env, string host) {
 	std::vector< string >	ip_listen;
 	std::vector< string >	ip_required;
 
-	cout << "Requested: " << _listen.ip << ":" << _listen.port << "\n";
-	ip_required = split(_listen.ip, '.');
+	ip_required = split(_listen.ip, ".");
 	for (std::vector< Server * >::iterator sit = env->_servers.begin();
 		 sit < env->_servers.end(); sit++) {
 
@@ -122,7 +121,7 @@ Server *Master::choose_server(Env *env, string host) {
 				continue;
 			}
 			bool is_inrange = true;
-			ip_listen = split((*it).ip, '.');
+			ip_listen = split((*it).ip, ".");
 			std::vector< string >::iterator r = ip_required.begin();
 			for (std::vector< string >::iterator l = ip_listen.end();
 				 l >= ip_listen.begin(); --l) {
@@ -134,20 +133,16 @@ Server *Master::choose_server(Env *env, string host) {
 		}
 	}
 	if (exact.size() == 0) {
-		cout << "Inrange: ";
 		for (std::vector< Server * >::iterator sit = inrange.begin();
 			 sit < inrange.end(); sit++) {
-			cout << "- " << (*sit)->getName() << "\n";
-			if (host == ((*sit)->getName() + "\r"))
+			if (host == (*sit)->getName())
 				return *sit;
 		}
 		return inrange.front();
 	} else {
-		cout << "Exact: \n";
 		for (std::vector< Server * >::iterator sit = exact.begin();
 			 sit < exact.end(); sit++) {
-			cout << "- " << (*sit)->getName() << "\n";
-			if (host == ((*sit)->getName() + "\r"))
+			if (host == (*sit)->getName())
 				return *sit;
 		}
 		return exact.front();

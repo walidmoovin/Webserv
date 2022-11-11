@@ -66,8 +66,7 @@ void Env::cycle(void) {
 void Env::set_fds(void) {
 	for (std::vector< Master * >::iterator it = _masters.begin();
 		 it < _masters.end(); it++) {
-		if (*it)
-			(*it)->set_fds();
+		(*it)->set_fds();
 	}
 }
 /*|==========|

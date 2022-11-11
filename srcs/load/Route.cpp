@@ -104,8 +104,8 @@ string Route::correctUri(string uri) {
 	std::vector< string >::iterator it2;
 
 	ret << "./" << _root;
-	std::vector< string > loc_split = split(_location, '/');
-	std::vector< string > uri_split = split(uri, '/');
+	std::vector< string > loc_split = split(_location, "/");
+	std::vector< string > uri_split = split(uri, "/");
 	it2 = uri_split.begin();
 	for (it = loc_split.begin(); it < loc_split.end(); it++) {
 		while (it2 < uri_split.end() && *it2 == "")
