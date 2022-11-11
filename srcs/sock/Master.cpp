@@ -1,9 +1,19 @@
 #include "webserv.hpp"
+/* Master destructor */
 
 Master::~Master(void) {
 	close(_fd);
 	cout << "Destroyed master socket\n";
 }
+/* |==========|
+ * Master constructor
+ * Try to create a socket listening to ip and port defined by input.
+ * If the creation success, the socket is then ready to select for new clients.
+ *
+ * Input: A listen_t structure which contain the ip and the port the master care
+ * about.
+ * Output: A Master object.
+ */
 
 Master::Master(listen_t list) : _listen(list) {
 	int	   opt = 1;
@@ -34,6 +44,7 @@ Master::Master(listen_t list) : _listen(list) {
 		_min_fd = _fd;
 	_amount++;
 }
+/* Set into static Master::readfds the active fds which will be select.*/
 
 void Master::set_fds(void) {
 	FD_SET(_fd, &_readfds);
@@ -47,6 +58,12 @@ void Master::set_fds(void) {
 			_max_fd = child_fd;
 	}
 }
+/* |==========|
+ * Refresh master socket datas after select()
+ * - look first for new clients
+ * - look then if known clients sent requests or disconnected
+ * - if client sent request, handle it to generate answer adapted
+ */
 
 void Master::refresh(Env *env) {
 	int	 valread;
@@ -88,11 +105,8 @@ Server *Master::choose_server(Env *env, string host) {
 	std::vector< Server * > inrange;
 	std::vector< string >	ip_listen;
 	std::vector< string >	ip_required;
-	// string ip = inet_ntoa(sock->_address.sin_addr);
-	// int port = ntohs(sock->_address.sin_port);
 
-	// cout << "Which server for " << ip << ":" << port << "?\n";
-	cout << "Socket: " << _listen.ip << ":" << _listen.port << "\n";
+	cout << "Requested: " << _listen.ip << ":" << _listen.port << "\n";
 	ip_required = split(_listen.ip, '.');
 	for (std::vector< Server * >::iterator sit = env->_servers.begin();
 		 sit < env->_servers.end(); sit++) {
@@ -110,8 +124,8 @@ Server *Master::choose_server(Env *env, string host) {
 			bool is_inrange = true;
 			ip_listen = split((*it).ip, '.');
 			std::vector< string >::iterator r = ip_required.begin();
-			for (std::vector< string >::iterator l = ip_listen.begin();
-				 l < ip_listen.end(); l++) {
+			for (std::vector< string >::iterator l = ip_listen.end();
+				 l >= ip_listen.begin(); --l) {
 				if (*l != *r && *l != "0")
 					is_inrange = false;
 			}
@@ -120,12 +134,22 @@ Server *Master::choose_server(Env *env, string host) {
 		}
 	}
 	if (exact.size() == 0) {
+		cout << "Inrange: ";
 		for (std::vector< Server * >::iterator sit = inrange.begin();
 			 sit < inrange.end(); sit++) {
-			if (host == (*sit)->getName())
+			cout << "- " << (*sit)->getName() << "\n";
+			if (host == ((*sit)->getName() + "\r"))
 				return *sit;
 		}
 		return inrange.front();
-	} else
+	} else {
+		cout << "Exact: \n";
+		for (std::vector< Server * >::iterator sit = exact.begin();
+			 sit < exact.end(); sit++) {
+			cout << "- " << (*sit)->getName() << "\n";
+			if (host == ((*sit)->getName() + "\r"))
+				return *sit;
+		}
 		return exact.front();
+	}
 }

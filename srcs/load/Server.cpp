@@ -1,6 +1,5 @@
 #include "webserv.hpp"
-
-/*|=======================|
+/*|===========|
  * Server destructor:
  *
  * delete all routes owned by the server;
@@ -12,8 +11,7 @@ Server::~Server(void) {
 		delete (*it).second;
 	cout << "Server destroyed!\n";
 }
-
-/*|=======================|
+/*|===========|
  * Server constructor:
  *
  * Input: A server block node given by JSONParser.
@@ -21,6 +19,7 @@ Server::~Server(void) {
  * Route. The Route constructor scrap the routing informations (index, root,
  * autoindex ...) and the Server one the others ones (server_name, sub-routes)
  */
+
 Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 	JSONObject datas = server->obj();
 	if (datas["server_name"])
@@ -36,7 +35,14 @@ Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 }
 
 /* Get the server name (_server_name)*/
+
 string Server::getName(void) { return _name; }
+/* |==========|
+ * Safely create a master socket:
+ *
+ * Input: a "ip:port" string
+ * Output: a Master socket or NULL if creation failed
+ */
 
 Master *Server::create_master(string str) {
 	listen_t listen = get_listen_t(str);
@@ -44,16 +50,15 @@ Master *Server::create_master(string str) {
 		cout << "Listen: IPv6 isn't supported\n";
 	}
 	try {
-		Master *sock = new Master(listen);
 		_listens.push_back(listen);
+		Master *sock = new Master(listen);
 		return (sock);
 	} catch (std::exception &e) {
 		std::cerr << e.what() << '\n';
 		return NULL;
 	}
 }
-
-/*|=======================|
+/*|===========|
  * Create server's defined sockets:
  *
  * Input: A server block node from JSONParser.
@@ -65,24 +70,26 @@ std::vector< Master * > Server::get_sockets(JSONNode *server) {
 	JSONObject				datas = server->obj();
 	std::vector< Master * > ret;
 	listen_t				listen;
+	Master				   *tmp;
 	if (datas["listens"]) {
 		JSONList listens = datas["listens"]->lst();
 		for (JSONList::iterator it = listens.begin(); it != listens.end();
 			 it++) {
-			ret.push_back(create_master((*it)->str()));
+			if ((tmp = create_master((*it)->str())))
+				ret.push_back(tmp);
 		}
-	} else
-		ret.push_back(create_master("localhost:8080"));
+	} else if ((tmp = create_master("0.0.0.0")))
+		ret.push_back(tmp);
 	return ret;
 }
-
-/*|=======================|
+/*|===========|
  * Choose the route an uri asked to the server must lead to.
  *
  * Intput: The uri asked by the client to the server.
  * Output: The route object choosen or the server itself if no location block is
  * adapted.
  */
+
 Route *Server::choose_route(string uri) {
 	std::vector< string > req = split(uri, '/');
 	std::vector< string > root;
@@ -90,7 +97,6 @@ Route *Server::choose_route(string uri) {
 		 rit != _routes.end(); rit++) {
 		root = split((*rit).first, '/');
 		std::vector< string >::iterator root_it = root.begin();
-
 		for (std::vector< string >::iterator it = req.begin(); it < req.end();
 			 it++) {
 			if (*it == "")

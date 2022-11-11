@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-/*|=======================|
+/*|==========|
  * Environment destructor:
  *
  * The destructor call all servers and sockets destructors.
@@ -16,7 +16,7 @@ Env::~Env() {
 	}
 }
 
-/*|=======================|
+/*|==========|
  * Environment constructor:
  *
  * Input: The JSONParser output
@@ -38,6 +38,12 @@ Env::Env(JSONNode *conf) {
 	}
 	delete conf;
 }
+/*|==========|
+ * One server cycle
+ * - append sockets to listen to select list
+ * - select them
+ * - refresh and handle requests
+ */
 
 void Env::cycle(void) {
 	FD_ZERO(&Master::_readfds);
@@ -52,19 +58,19 @@ void Env::cycle(void) {
 	cout << "==> Handle requests and answers:\n";
 	refresh();
 }
-
-/*|=======================|
+/*|==========|
  * Append each master_sockets and their clients to list of fds SELECT must look
  * at.
  */
 
 void Env::set_fds(void) {
 	for (std::vector< Master * >::iterator it = _masters.begin();
-		 it < _masters.end(); it++)
-		(*it)->set_fds();
+		 it < _masters.end(); it++) {
+		if (*it)
+			(*it)->set_fds();
+	}
 }
-
-/*|=======================|
+/*|==========|
  * Refresh all master_sockets and their clients datas (disconnect, new
  * connection, etc..) and parse requests recieved.
  */

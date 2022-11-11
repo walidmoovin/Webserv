@@ -1,4 +1,14 @@
 #include "webserv.hpp"
+/* |==========|
+ * Route constructor:
+ * A route is a class which is used with each request to know how to handle uri
+ * requested They are defined with conf file from locations block for raw routes
+ * and from servers blocks for Server class which herite from Route
+ *
+ * Input: The Server parent for locations blocks, the uri which lead to the
+ * route and the JSON node giving conf datas
+ * Output: A Route object
+ */
 
 Route::Route(Server *server, string location, JSONNode *datas)
 	: _server(server), _location(location) {
@@ -30,12 +40,20 @@ Route::Route(Server *server, string location, JSONNode *datas)
 		}
 	}
 }
+/* Route destructor */
 
 Route::~Route(void) {}
+/* Getters ... */
 
 string Route::getLocation(void) { return _location; }
 string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
+/* |==========|
+ * Find either an autoindex or an index into the directory required by request
+ *
+ * Input: The uri client asked, the real local path to the directory
+ * Output: The file or the autoindex page to display
+ */
 
 string Route::getIndex(string uri, string path) {
 	std::stringstream				content;
@@ -73,6 +91,12 @@ string Route::getIndex(string uri, string path) {
 	ret << "\r\n" << content.str();
 	return ret.str();
 }
+/* |==========|
+ * Correct the uri the client asked
+ *
+ * Input: The uri
+ * Output: The local path corresponding to that uri in the route
+ */
 
 string Route::correctUri(string uri) {
 	std::stringstream				ret;

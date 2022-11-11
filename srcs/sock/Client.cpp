@@ -54,7 +54,6 @@ bool Client::parseHeader() {
 		for (std::vector< string >::iterator it = lines.begin() + 1;
 			 it < lines.end(); it++) {
 			line = split(*it, ' ');
-			cout << line.at(0) << "scraped from header\n";
 			_request[line.at(0)] =
 				std::vector< string >(line.begin() + 1, line.end());
 		}
