@@ -67,12 +67,14 @@ bool Client::check_method(Server *server, Route *route, string method) {
 	std::vector< string > allowed;
 	if (method != "GET" && method != "POST" && method != "DELETE")
 		send_error(405);
-	else if ((allowed = route->_headers).size() > 0) {
-		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
-			send_error(405);
-	} else if ((allowed = server->_headers).size() > 0) {
-		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
-			send_error(405);
+	else if ((allowed = route->_headers).size() > 0 &&
+			 std::find(allowed.begin(), allowed.end(), method) ==
+				 allowed.end()) {
+		send_error(405);
+	} else if ((allowed = server->_headers).size() > 0 &&
+			   std::find(allowed.begin(), allowed.end(), method) ==
+				   allowed.end()) {
+		send_error(405);
 	} else
 		return (true);
 	return (false);

@@ -12,7 +12,7 @@ int main(int ac, char **av) {
 		std::string config_file = "default.json";
 		if (ac == 2)
 			config_file = av[1];
-		std::ifstream file(config_file);
+		std::ifstream file(config_file.c_str());
 		if (!file.good())
 			throw std::runtime_error("File not found");
 		cout << "Parsing configuration file from JSON conf file.\n";
@@ -23,8 +23,7 @@ int main(int ac, char **av) {
 		Env env(conf);
 		while (1)
 			env.cycle();
-	}
-	catch(const std::exception& e) {
+	} catch (const std::exception &e) {
 		std::cerr << e.what() << '\n';
 	}
 	return EXIT_SUCCESS;
