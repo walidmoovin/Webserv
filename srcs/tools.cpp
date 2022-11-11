@@ -221,15 +221,15 @@ string read_file(string path) {
 	string			  str;
 	string			  content;
 	std::stringstream ret;
-	struct stat		  info;
-	if (stat(path.c_str(), &info) != 0 || S_ISDIR(info.st_mode)) {
+	// struct stat		  info;
+	/*if (stat(path.c_str(), &info) != 0 || S_ISDIR(info.st_mode)) {
 		std::cerr << "stat() error on " << path << ": " << strerror(errno)
 				  << "\n";
 		return "";
-	}
+	}*/
 	std::ifstream file(path.c_str());
-	// if (!file.good())
-	//		return "";
+	if (!file.good())
+		return "";
 	while (file) {
 		std::getline(file, str);
 		content += str + "\n";

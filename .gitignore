@@ -21,4 +21,5 @@
 !srcs/*.cpp
 !srcs/load/
 !srcs/json/
+!srcs/sock/
 !srcs/*/*.cpp

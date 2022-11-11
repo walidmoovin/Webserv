@@ -16,9 +16,8 @@ class Client {
 	bool getRequest(string paquet);
 	bool parseHeader();
 	int	 answer(Env *env);
-	void call_cgi(string cgi, string path);
-	void send_404();
+	void send_cgi(string cgi, string path);
+	void send_error(int error_code);
 	void send_answer(string msg);
-	bool waitHeader();
 	friend class Master;
 };
