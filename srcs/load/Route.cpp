@@ -3,7 +3,7 @@
 Route::Route(Server *server, string location, JSONNode *datas)
 	: _server(server), _location(location) {
 	JSONObject object = datas->obj();
-	JSONNode *tmp;
+	JSONNode  *tmp;
 	if ((tmp = object["root"]))
 		_root = tmp->str();
 	if ((tmp = object["return"]))
@@ -24,29 +24,29 @@ Route::Route(Server *server, string location, JSONNode *datas)
 		}
 	}
 	if ((tmp = object["cgi"])) {
-       JSONObject cgis = tmp->obj();
-        for (JSONObject::iterator it = cgis.begin(); it != cgis.end(); it++) {
-            _cgi[(*it).first] = (*it).second->str();
-        }
-    }
+		JSONObject cgis = tmp->obj();
+		for (JSONObject::iterator it = cgis.begin(); it != cgis.end(); it++) {
+			_cgi[(*it).first] = (*it).second->str();
+		}
+	}
 }
 
 Route::~Route(void) {}
 
-string Route::getLocation(void) { return _location; }
-string Route::getRoot(void) { return _root; }
-string Route::getReturn(void) { return _ret; }
-std::vector<string> Route::getIndexsLst(void) { return _indexs; }
-std::vector<string> Route::getHeadersLst(void) { return _headers; }
+string				  Route::getLocation(void) { return _location; }
+string				  Route::getRoot(void) { return _root; }
+string				  Route::getReturn(void) { return _ret; }
+std::vector< string > Route::getIndexsLst(void) { return _indexs; }
+std::vector< string > Route::getHeadersLst(void) { return _headers; }
 
 string Route::getIndex(string uri, string path) {
-	std::stringstream content;
-	std::stringstream ret;
-	DIR *dir;
-	struct dirent *entry;
-	struct stat info;
-	std::vector<string> indexs = getIndexsLst();
-	std::vector<string>::iterator it;
+	std::stringstream				content;
+	std::stringstream				ret;
+	DIR							   *dir;
+	struct dirent				   *entry;
+	struct stat						info;
+	std::vector< string >			indexs = getIndexsLst();
+	std::vector< string >::iterator it;
 
 	if ((dir = opendir(path.c_str())) == NULL)
 		return "";
@@ -78,17 +78,17 @@ string Route::getIndex(string uri, string path) {
 }
 
 string Route::correctUri(string uri) {
-	std::stringstream ret;
-	std::vector<string>::iterator it;
-	std::vector<string>::iterator it2;
+	std::stringstream				ret;
+	std::vector< string >::iterator it;
+	std::vector< string >::iterator it2;
 
 	cout << "Correcting request: " << uri << " with root: " << _root << "\n";
 	ret << "./" << _root;
-	std::vector<string> loc_split = split(_location, '/');
-	std::vector<string> uri_split = split(uri, '/');
+	std::vector< string > loc_split = split(_location, '/');
+	std::vector< string > uri_split = split(uri, '/');
 	it2 = uri_split.begin();
 	for (it = loc_split.begin(); it < loc_split.end(); it++) {
-		while ( it2 < uri_split.end() && *it2 == "")
+		while (it2 < uri_split.end() && *it2 == "")
 			it2++;
 		while (it < loc_split.end() && *it == "")
 			it++;
@@ -99,7 +99,7 @@ string Route::correctUri(string uri) {
 	while (it2 < uri_split.end()) {
 		ret << "/" << *(it2++);
 	}
-	
+
 	cout << "result: " << ret.str() << "\n";
 	return ret.str();
 }

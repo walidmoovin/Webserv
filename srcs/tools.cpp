@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 
 void *ft_memset(void *b, int c, size_t len) {
-	size_t i;
+	size_t		   i;
 	unsigned char *b_cpy;
 
 	b_cpy = (unsigned char *)b;
@@ -18,10 +18,11 @@ bool isInt(string str) {
 	return true;
 }
 
-std::vector<string> split(string str, char delim) {
-	std::vector<std::string> tokens;
-	std::string token;
-	std::stringstream ss(str);
+std::vector< string > split(string str, char delim) {
+	std::vector< std::string > tokens;
+	string					   token;
+	std::stringstream		   ss(str);
+
 	while (getline(ss, token, delim))
 		tokens.push_back(token);
 	return tokens;
@@ -29,8 +30,8 @@ std::vector<string> split(string str, char delim) {
 
 listen_t get_listen_t(string listen) {
 	listen_t ret;
-	size_t sep_pos = listen.rfind(':');
-	string tmp = listen.substr(0, sep_pos);
+	size_t	 sep_pos = listen.rfind(':');
+	string	 tmp = listen.substr(0, sep_pos);
 
 	ret.ip = isInt(tmp) ? "0.0.0.0" : (tmp == "localhost" ? "127.0.0.1" : tmp);
 	tmp = listen.substr(sep_pos + 1, listen.length() - sep_pos - 1).c_str();
@@ -39,9 +40,9 @@ listen_t get_listen_t(string listen) {
 }
 
 string getMime(string path) {
-	string extension;
 	size_t pos = path.rfind('.');
-	extension = (pos == string::npos) ? "txt" : path.substr(pos + 1);
+	string extension = (pos == string::npos) ? "txt" : path.substr(pos + 1);
+
 	if ((extension == "html") || (extension == "htm") || (extension == "shtml"))
 		return ("text/html");
 	else if ((extension == "css"))
@@ -210,17 +211,17 @@ string getMime(string path) {
 }
 
 string get_extension(string str) {
-    int dot_pos = str.rfind('.');
-    string ret = str.substr(dot_pos);
-    cout << ret << "\n";
-    return ret;
+	int	   dot_pos = str.rfind('.');
+	string ret = str.substr(dot_pos);
+	cout << ret << "\n";
+	return ret;
 }
 
 string read_file(string path) {
-	string str;
-	string content;
+	string			  str;
+	string			  content;
 	std::stringstream ret;
-	struct stat info;
+	struct stat		  info;
 	if (stat(path.c_str(), &info) != 0 || S_ISDIR(info.st_mode)) {
 		std::cerr << "stat() error on " << path << ": " << strerror(errno)
 				  << "\n";

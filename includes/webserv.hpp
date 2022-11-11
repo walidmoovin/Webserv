@@ -1,5 +1,7 @@
 #pragma once
 
+#define DEBUG 0
+
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -11,6 +13,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 #include <unistd.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
@@ -26,38 +29,39 @@
 #include <map>
 #include <vector>
 
-#define DEBUG 0
-
 using std::cout;
 using std::strerror;
 using std::string;
 
 typedef struct listen_s {
 	string ip;
-	int port;
+	int	   port;
 } listen_t;
 
+class JSONNode;
 class Env;
 class Server;
-class Socket;
 class Route;
-class JSONNode;
+class Master;
+class Client;
 
-typedef std::map<string, JSONNode *> JSONObject;
-typedef std::vector<JSONNode *> JSONList;
+typedef std::map< string, JSONNode * > JSONObject;
+typedef std::vector< JSONNode * >	   JSONList;
 
-void *ft_memset(void *b, int c, size_t len);
-bool isInt(string str);
-std::vector<string> split(string str, char delim);
-listen_t get_listen_t(string listen);
-string getMime(string path);
-string get_extension(string str);
-string read_file(string path);
+void				 *ft_memset(void *b, int c, size_t len);
+bool				  isInt(string str);
+std::vector< string > split(string str, char delim);
+listen_t			  get_listen_t(string listen);
+string				  getMime(string path);
+string				  get_extension(string str);
+string				  read_file(string path);
+
+#include "Client.hpp"
+#include "Master.hpp"
 
 #include "Nodes.hpp"
 #include "Token.hpp"
 #include "Parser.hpp"
 #include "Route.hpp"
-#include "Socket.hpp"
 #include "Server.hpp"
 #include "Env.hpp"

@@ -3,11 +3,11 @@
 
 class Env {
   public:
-	std::vector<Server *> _servers;
-	std::vector<Socket *> _sockets;
+	std::vector< Server * > _servers;
+	std::vector< Master * > _masters;
 	Env(JSONNode *conf);
+	void cycle(void);
 	void set_fds(void);
 	void refresh(void);
-	Server *choose_server(Socket *sock, string host);
-	~Env();
+	~Env(void);
 };
