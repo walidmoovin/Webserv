@@ -63,15 +63,7 @@ bool Client::parseHeader() {
 	return true;
 }
 
-int Client::answer(Env *env) {
-	cout << "Method: " << _request["Method:"].at(0) << "\n";
-	cout << "URI: " << _request["Method:"].at(1) << "\n";
-	cout << "Host: " << _request["Host:"].at(0) << "\n";
-	string ret;
-
-	Server *server = _parent->choose_server(env, _request["Host:"].at(0));
-	Route  *route = server->choose_route(_request["Method:"].at(1));
-	string	method = _request["Method:"].at(0);
+bool Client::check_method(Server *server, Route *route, string method) {
 	std::vector< string > allowed;
 	if (method != "GET" && method != "POST" && method != "DELETE")
 		send_error(405);
@@ -81,21 +73,35 @@ int Client::answer(Env *env) {
 	} else if ((allowed = server->_headers).size() > 0) {
 		if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
 			send_error(405);
-	}
-
-	string path = route->correctUri(_request["Method:"].at(1));
-	string cgi = route->_cgi.size() ? route->_cgi[get_extension(path)] : "";
-	if (cgi == "") {
-		if ((ret = route->getIndex(_request["Method:"].at(1), path)) == "" &&
-			(ret = read_file(path)) == "")
-			send_error(404);
-		else
-			send_answer("HTTP/1.1 200 OK\r\n" + ret);
 	} else
-		send_cgi(cgi, path);
+		return (true);
+	return (false);
+}
+
+void Client::answer(Env *env) {
+	cout << "Method: " << _request["Method:"].at(0) << "\n";
+	cout << "URI: " << _request["Method:"].at(1) << "\n";
+	cout << "Host: " << _request["Host:"].at(0) << "\n";
+	string ret;
+
+	Server *server = _parent->choose_server(env, _request["Host:"].at(0));
+	Route  *route = server->choose_route(_request["Method:"].at(1));
+	string	method = _request["Method:"].at(0);
+	if (check_method(server, route, method)) {
+		string path = route->correctUri(_request["Method:"].at(1));
+		string cgi = route->_cgi.size() ? route->_cgi[get_extension(path)] : "";
+		if (cgi == "") {
+			if ((ret = route->getIndex(_request["Method:"].at(1), path)) ==
+					"" &&
+				(ret = read_file(path)) == "")
+				send_error(404);
+			else
+				send_answer("HTTP/1.1 200 OK\r\n" + ret);
+		} else
+			send_cgi(cgi, path);
+	}
 	_content = "";
 	_header = "";
-	return EXIT_SUCCESS;
 }
 
 void Client::send_cgi(string cgi, string path) {
@@ -105,7 +111,7 @@ void Client::send_cgi(string cgi, string path) {
 	string			  ret;
 
 	if (!std::ifstream(cgi.c_str()).good())
-		send_error(404); // another error else ?
+		return send_error(404);
 	pipe(fd);
 	int pid = fork();
 	if (pid == 0) {

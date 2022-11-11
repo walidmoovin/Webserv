@@ -15,7 +15,8 @@ class Client {
 	~Client(void);
 	bool getRequest(string paquet);
 	bool parseHeader();
-	int	 answer(Env *env);
+	void answer(Env *env);
+	bool check_method(Server *server, Route *route, string method);
 	void send_cgi(string cgi, string path);
 	void send_error(int error_code);
 	void send_answer(string msg);
