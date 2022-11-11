@@ -1,4 +1,4 @@
-NAME= server
+NAME= webserv
 SRCS= srcs/webserv.cpp srcs/tools.cpp srcs/load/Env.cpp srcs/load/Server.cpp \
 	  srcs/load/Route.cpp   srcs/sock/Master.cpp srcs/sock/Client.cpp \
 	  srcs/json/Nodes.cpp srcs/json/Token.cpp srcs/json/Parser.cpp
