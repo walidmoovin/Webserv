@@ -90,7 +90,7 @@ string Client::header_pick(string key, int id) {
 void Client::answer(Env *env) {
 	string method = header_pick("Method:", 0);
 	string uri = header_pick("Method:", 1);
-	string host = header_pick("Method:", 0);
+	string host = header_pick("Host:", 0);
 	cout << "Method: " << method << "\n";
 	cout << "URI: " << uri << "\n";
 	cout << "Host: " << host << "\n";
