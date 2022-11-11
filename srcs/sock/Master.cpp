@@ -1,47 +1,38 @@
 #include "webserv.hpp"
 
-Master::Master(listen_t listen) : _listen(listen) {}
 Master::~Master(void) {
 	close(_fd);
 	cout << "Destroyed master socket\n";
 }
 
-int Master::launch(void) {
+Master::Master(listen_t list) : _listen(list) {
 	int	   opt = 1;
 	string ip = _listen.ip;
 	int	   port = _listen.port;
 
 	_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_fd == 0) {
-		cout << "Socket creation: " << strerror(errno) << "\n";
-		return (EXIT_FAILURE);
-	}
+	if (_fd == 0)
+		throw std::runtime_error("socket() error" + string(strerror(errno)));
 	int opt_ret =
 		setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
-	if (opt_ret < 0) {
-		cout << "Sockopt: " << strerror(errno) << "\n";
-		return (EXIT_FAILURE);
-	}
+	if (opt_ret < 0)
+		throw std::runtime_error("setsockopt() error: " +
+								 string(strerror(errno)));
 
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = inet_addr(ip.c_str());
 	_address.sin_port = htons(port);
 
-	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0) {
-		cout << "Bind: " << strerror(errno) << "\n";
-		return (EXIT_FAILURE);
-	}
+	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)
+		throw std::runtime_error("bind() error: " + string(strerror(errno)));
 	cout << "Listener " << ip << " on port " << port << "\n";
 
-	if (listen(_fd, 3) < 0) {
-		cout << "Listen: " << strerror(errno) << "\n";
-		return (EXIT_FAILURE);
-	}
+	if (listen(_fd, 3) < 0)
+		throw std::runtime_error("listen() error: " + string(strerror(errno)));
 	cout << "Master: " << _fd << "\n";
 	if (_fd < _min_fd)
 		_min_fd = _fd;
 	_amount++;
-	return (EXIT_SUCCESS);
 }
 
 void Master::set_fds(void) {

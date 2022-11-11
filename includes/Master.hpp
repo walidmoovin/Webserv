@@ -2,7 +2,6 @@
 #include "webserv.hpp"
 
 class Master {
-	// int _clients_amount;
 	int						_fd;
 	std::vector< Client * > _childs;
 	struct sockaddr_in		_address;
@@ -12,7 +11,6 @@ class Master {
 	Master(int fd, Master *parent);
 	~Master(void);
 
-	int		launch(void);
 	void	set_fds(void);
 	void	refresh(Env *env);
 	Server *choose_server(Env *env, string host);

@@ -46,19 +46,23 @@ std::vector< Master * > Server::get_sockets(JSONNode *server) {
 				cout << "Listen: IPv6 isn't supported\n";
 				continue;
 			}
-			_listens.push_back(listen);
-			Master *sock = new Master(listen);
-			if (sock->launch() == EXIT_SUCCESS)
+			try {
+				Master *sock = new Master(listen);
 				ret.push_back(sock);
-			else
-				delete sock;
+				_listens.push_back(listen);
+			} catch (std::exception &e) {
+				cout << e.what() << '\n';
+			}
 		}
 	} else {
 		listen = get_listen_t("localhost:80");
-		Master *sock = new Master(listen);
-		_listens.push_back(listen);
-		if (sock->launch() == EXIT_SUCCESS) {
+
+		try {
+			Master *sock = new Master(listen);
+			_listens.push_back(listen);
 			ret.push_back(sock);
+		} catch (std::exception &e) {
+			cout << e.what() << '\n';
 		}
 	}
 	return ret;
