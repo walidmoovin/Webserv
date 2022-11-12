@@ -25,19 +25,25 @@ Master::Master(ip_port_t list) : _listen(list) {
 		throw std::runtime_error("socket() error" + string(strerror(errno)));
 	int opt_ret =
 		setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
-	if (opt_ret < 0)
+	if (opt_ret < 0) {
+		close(_fd);
 		throw std::runtime_error("setsockopt() error: " +
 								 string(strerror(errno)));
+	}
 
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = inet_addr(ip.c_str());
 	_address.sin_port = htons(port);
 
-	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)
+	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0) {
+		close(_fd);
 		throw std::runtime_error("bind() error: " + string(strerror(errno)));
+	}
 
-	if (listen(_fd, 3) < 0)
+	if (listen(_fd, 3) < 0) {
+		close(_fd);
 		throw std::runtime_error("listen() error: " + string(strerror(errno)));
+	}
 	cout << "New master socket with fd " << _fd << " which listen " << ip << ":"
 		 << port << "\n";
 	if (_fd < _min_fd)

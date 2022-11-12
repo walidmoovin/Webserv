@@ -26,6 +26,8 @@ void Client::clean(void) {
 }
 
 bool Client::getHeader(Env *env, string paquet) {
+	if (paquet.length() < 1)
+		send_error(403);
 	if (header_pick("Method:", 0) != "")
 		return true;
 	std::vector< string > lines = split(paquet, "\r\n");
@@ -212,7 +214,15 @@ void Client::send_cgi(string cgi, string path) {
 	   << ret;
 	send_answer(ss.str());
 }
-
+/*
+void Client::send_redir(int redir_code, string opt) {
+	switch (redir_code) {
+	case 301:
+		return send_answer(
+			"HTTTP/1.1 301 Moved Permanently\r\nLocation: " + opt + "\r\n\r\n");
+	}
+}
+*/
 void Client::send_error(int error_code) {
 	switch (error_code) {
 	case 400:
