@@ -94,10 +94,9 @@ void Master::refresh(Env *env) {
 							(socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
-			} else {
-				if ((*it)->getRequest(env, buffer))
-					(*it)->answer();
-			}
+				//} else if ((*it)->getRequest(env, buffer))
+			} else if ((*it)->getHeader(env, buffer) && (*it)->getBody(buffer))
+				(*it)->answer();
 		}
 	}
 }

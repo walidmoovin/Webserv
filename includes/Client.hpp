@@ -27,9 +27,13 @@ class Client {
 	bool   parseHeader(Env *env);
 	string header_pick(string key, size_t id);
 	void   answer();
-	bool   check_method(string method);
+	bool   check_method();
 	void   send_cgi(string cgi, string path);
 	void   send_error(int error_code);
 	void   send_answer(string msg);
+
+	bool getHeader(Env *env, string paquet);
+	bool getBody(string paquet);
+
 	friend class Master;
 };

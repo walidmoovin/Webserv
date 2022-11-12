@@ -25,39 +25,80 @@ void Client::clean(void) {
 	_request.clear();
 }
 
+bool Client::getHeader(Env *env, string paquet) {
+	if (header_pick("Method:", 0) != "")
+		return true;
+	std::vector< string > lines = split(paquet, "\r\n");
+	for (std::vector< string >::iterator it = lines.begin(); it < lines.end();
+		 it++) {
+		if (*it == "") {
+			if (!this->parseHeader(env))
+				return false;
+			size_t pos = paquet.find("\r\n\r\n");
+			if (pos != string::npos)
+				paquet.erase(pos + 4);
+			return true;
+		} else
+			_header += *it + "\r\n";
+	}
+	_header.resize(_header.length() - 2);
+	return false;
+}
+
+bool Client::getBody(string paquet) {
+	std::vector< string > lines = split(paquet, "\r\n");
+
+	long chunk_len = header_pick("Transfer-Encoding:", 0) == "chunked"
+						 ? std::strtol(lines.at(0).c_str(), 0, 16)
+						 : -1;
+
+	std::vector< string >::iterator it;
+	for (it = lines.begin(); it < lines.end(); it++) {
+		if (chunk_len == -1 || it != lines.begin())
+			_content += *it + "\r\n";
+	}
+	_content.resize(_content.length() - 2);
+	if ((header_pick("Method:", 0) == "GET" && *it == "") ||
+		(chunk_len == 0 ||
+		 std::strtoul(header_pick("Content-Length:", 0).c_str(), 0, 10) <=
+			 _content.length())) {
+		cout << "Request received\n";
+		return true;
+	}
+	return false;
+}
+
 bool Client::getRequest(Env *env, string paquet) {
-	// cout << "|===|paquet|===>" << paquet << "|===||\n";
+	cout << "|===|paquet|===>\n" << paquet << "|===||\n";
 	if (paquet.length() < 1) // HTTPS?
 		return false;
 	std::vector< string > lines = split(paquet, "\n");
-	long				  chunk_len;
-	chunk_len = (_content.length() > 0 &&
-				 header_pick("Transfer-Encoding:", 0) == "chunked")
-					? std::strtol(lines.at(0).c_str(), 0, 16)
-					: -1;
-	cout << "Chunk length: " << chunk_len << "\n";
+	long				  chunk_len = (_content.length() > 0 &&
+					   header_pick("Transfer-Encoding:", 0) == "chunked")
+										  ? std::strtol(lines.at(0).c_str(), 0, 16)
+										  : -1;
+	cout << "Chunk length: " << chunk_len << "\r\n";
 	for (std::vector< string >::iterator it = lines.begin(); it < lines.end();
 		 it++) {
-		if (*it == "\r" && _content.length() == 0) {
+		if (*it == "\r" && header_pick("Method:", 0) == "") {
 			if (!this->parseHeader(env))
 				return false;
-		}
-		if (*it != "\r" && _content.length() == 0)
+		} else if (*it != "\r" && header_pick("Method:", 0) == "")
 			_header += *it + "\n";
-		else if (chunk_len == -1 || it != lines.begin())
+		else if (*it != "\r" && (chunk_len == -1 || it != lines.begin()))
 			_content += *it + "\n";
 	}
 	cout << "Content: \n-|" << _content << "|-\n";
 	if (_content.length() > 0) {
 		_content.resize(_content.length() - 1);
-		if (header_pick("Method:", 0) == "GET" ||
+		if ((header_pick("Method:", 0) == "GET" && _content.find("\r\n\r\n")) ||
 			(chunk_len == 0 ||
 			 std::strtoul(header_pick("Content-Length:", 0).c_str(), 0, 10) <=
 				 _content.length())) {
 			cout << "Request received\n";
 			return true;
 		}
-	} else
+	} else if (header_pick("Method:", 0) == "")
 		_header.resize(_header.length() - 1);
 	return false;
 }
@@ -96,17 +137,13 @@ bool Client::parseHeader(Env *env) {
 	return true;
 }
 
-bool Client::check_method(string method) {
+bool Client::check_method() {
 	std::vector< string > allowed;
-	if (method != "GET" && method != "POST" && method != "DELETE")
+	if (_method != "GET" && _method != "POST" && _method != "DELETE")
 		send_error(405);
-	else if ((allowed = _route->_headers).size() > 0 &&
-			 std::find(allowed.begin(), allowed.end(), method) ==
+	else if ((allowed = _route->_allowed_methods).size() > 0 &&
+			 std::find(allowed.begin(), allowed.end(), _method) ==
 				 allowed.end()) {
-		send_error(405);
-	} else if ((allowed = _server->_headers).size() > 0 &&
-			   std::find(allowed.begin(), allowed.end(), method) ==
-				   allowed.end()) {
 		send_error(405);
 	} else
 		return (true);
@@ -126,7 +163,7 @@ void Client::answer() {
 	cout << "URI: " << _uri << "\n";
 	cout << "Host: " << _host << "\n";
 	string ret;
-	if (check_method(_method)) {
+	if (check_method()) {
 		string path = _route->correctUri(_uri);
 		string cgi =
 			_route->_cgi.size() ? _route->_cgi[get_extension(path)] : "";
@@ -185,12 +222,12 @@ void Client::send_error(int error_code) {
 		return send_answer(
 			"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
 	case 405:
-		return send_answer(
-			"HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\n\r\n");
+		return send_answer("HTTP/1.1 405 Method Not Allowed\r\nConnection: "
+						   "close\r\nContent-Length: 0\r\n\r\n");
 	case 413:
 		return send_answer(
 			"HTTP/1.1 413 Payload Too "
-			"Large\r\nConnection:close\r\nContent-Length: 0\r\n\r\n");
+			"Large\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
 	}
 }
 

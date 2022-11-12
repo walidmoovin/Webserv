@@ -11,7 +11,7 @@ class Route {
 
   public:
 	std::vector< string >	   _indexs;
-	std::vector< string >	   _headers;
+	std::vector< string >	   _allowed_methods;
 	std::map< string, string > _cgi;
 	int						   _client_max_body_size;
 

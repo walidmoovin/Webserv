@@ -26,11 +26,11 @@ Route::Route(Server *server, string location, JSONNode *datas)
 			_indexs.push_back((*it)->str());
 		}
 	}
-	if ((tmp = object["add_header"])) {
+	if ((tmp = object["allowed_methods"])) {
 		JSONList headers = tmp->lst();
 		for (JSONList::iterator it = headers.begin(); it < headers.end();
 			 it++) {
-			_headers.push_back((*it)->str());
+			_allowed_methods.push_back((*it)->str());
 		}
 	}
 	if ((tmp = object["cgi"])) {
