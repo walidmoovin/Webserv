@@ -1,14 +1,12 @@
 #include "webserv.hpp"
 
 void *ft_memset(void *b, int c, size_t len) {
-	size_t		   i;
 	unsigned char *b_cpy;
 
 	b_cpy = (unsigned char *)b;
-	i = 0;
-	while (i < len)
-		*(unsigned char *)(b_cpy + i++) = (unsigned char)c;
-	return ((void *)b);
+	for (size_t i = 0; i < len; i++)
+		*(unsigned char *)(b_cpy + i) = (unsigned char)c;
+	return (b);
 }
 
 bool isInt(string str) {
@@ -19,10 +17,10 @@ bool isInt(string str) {
 }
 
 vec_string split(string str, string delim) {
-	string					   temp(str);
-	string					   token;
-	size_t					   pos;
-	std::vector< std::string > tokens;
+	string	   temp(str);
+	string	   token;
+	size_t	   pos;
+	vec_string tokens;
 
 	while ((pos = temp.find(delim)) != string::npos) {
 		token = temp.substr(0, pos);
@@ -49,6 +47,33 @@ ip_port_t get_ip_port_t(string ip, int port) {
 	ret.ip = ip;
 	ret.port = port;
 	return ret;
+}
+
+string read_file(string path) {
+	struct stat info;
+	if (stat(path.c_str(), &info) != 0) {
+		std::cerr << "stat() error on " << path << ": " << strerror(errno)
+				  << "\n";
+		return "404";
+	} else if (S_ISDIR(info.st_mode))
+		return "404";
+
+	std::ifstream file(path.c_str());
+	if (!file.good())
+		return "404";
+
+	string str, body;
+	while (file) {
+		std::getline(file, str);
+		body += str + "\n";
+	}
+
+	std::stringstream ret;
+	ret << "Content-type: " << getMime(path) << "\r\n"
+		<< "Content-length: " << body.length() << "\r\n"
+		<< "\r\n"
+		<< body;
+	return (ret.str());
 }
 
 string getMime(string path) {
@@ -220,28 +245,4 @@ string getMime(string path) {
 		return ("video/x-msvideo");
 	else
 		return ("text/plain");
-}
-
-string read_file(string path) {
-	string			  str;
-	string			  content;
-	std::stringstream ret;
-	struct stat		  info;
-	if (stat(path.c_str(), &info) != 0) {
-		std::cerr << "stat() error on " << path << ": " << strerror(errno)
-				  << "\n";
-		return "404";
-	} else if (S_ISDIR(info.st_mode))
-		return "404";
-	std::ifstream file(path.c_str());
-	if (!file.good())
-		return "404";
-	while (file) {
-		std::getline(file, str);
-		content += str + "\n";
-	}
-	ret << "Content-type: " << getMime(path) << "\r\n";
-	ret << "Content-length: " << content.length() << "\r\n";
-	ret << "\r\n" << content;
-	return (ret.str());
 }

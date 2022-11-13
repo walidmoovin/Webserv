@@ -16,34 +16,27 @@ Master::~Master(void) {
  */
 
 Master::Master(ip_port_t list) : _listen(list) {
-	int	   opt = 1;
+	int	   x = 1, port = _listen.port;
 	string ip = _listen.ip;
-	int	   port = _listen.port;
 
 	_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_fd == 0)
 		throw std::runtime_error("socket() error" + string(strerror(errno)));
-	int opt_ret =
-		setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
-	if (opt_ret < 0) {
-		close(_fd);
+	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&x, sizeof(x)) < 0 &&
+		close(_fd) <= 0)
 		throw std::runtime_error("setsockopt() error: " +
 								 string(strerror(errno)));
-	}
 
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = inet_addr(ip.c_str());
 	_address.sin_port = htons(port);
 
-	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0) {
-		close(_fd);
+	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) &&
+		close(_fd) <= 0)
 		throw std::runtime_error("bind() error: " + string(strerror(errno)));
-	}
 
-	if (listen(_fd, 3) < 0) {
-		close(_fd);
+	if (listen(_fd, 3) < 0 && close(_fd) <= 0)
 		throw std::runtime_error("listen() error: " + string(strerror(errno)));
-	}
 	cout << "New master socket with fd " << _fd << " which listen " << ip << ":"
 		 << port << "\n";
 	if (_fd < _min_fd)
@@ -54,14 +47,12 @@ Master::Master(ip_port_t list) : _listen(list) {
 
 void Master::set_fds(void) {
 	FD_SET(_fd, &_readfds);
-	int child_fd;
 
-	for (std::vector< Client * >::iterator it = _childs.begin();
-		 it < _childs.end(); it++) {
-		child_fd = (*it)->_fd;
-		FD_SET(child_fd, &_readfds);
-		if (child_fd > _max_fd)
-			_max_fd = child_fd;
+	for (std::vector< Client * >::iterator child = _childs.begin();
+		 child < _childs.end(); child++) {
+		FD_SET((*child)->_fd, &_readfds);
+		if ((*child)->_fd > _max_fd)
+			_max_fd = (*child)->_fd;
 	}
 }
 /* |==========|
@@ -101,11 +92,8 @@ void Master::refresh(Env *env) {
 							(socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
-			} else {
-				// print_block("Paquet: ", buffer);
-				if ((*it)->getHeader(env, buffer))
-					(*it)->answer();
-			}
+			} else if ((*it)->getHeader(env, buffer))
+				(*it)->answer();
 		}
 	}
 }
@@ -126,21 +114,19 @@ void Master::refresh(Env *env) {
  */
 
 Server *Master::choose_server(Env *env, string host) {
-	std::vector< Server * > exact;
-	std::vector< Server * > inrange;
-	vec_string				ip_listen;
-	vec_string				ip_required;
+	std::vector< Server * > exact, inrange;
+	vec_string				ip_listen, ip_required;
 
 	ip_required = split(_listen.ip, ".");
-	for (std::vector< Server * >::iterator sit = env->_servers.begin();
-		 sit < env->_servers.end(); sit++) {
-		std::vector< ip_port_t > serv_listens = (*sit)->_listens;
+	for (std::vector< Server * >::iterator server = env->_servers.begin();
+		 server < env->_servers.end(); server++) {
+		std::vector< ip_port_t > serv_listens = (*server)->_listens;
 		for (std::vector< ip_port_t >::iterator it = serv_listens.begin();
 			 it < serv_listens.end(); it++) {
 			if (_listen.port != (*it).port)
 				continue;
 			if (_listen.ip == (*it).ip) {
-				exact.push_back(*sit);
+				exact.push_back(*server);
 				continue;
 			}
 			bool is_inrange = true;
@@ -151,22 +137,22 @@ Server *Master::choose_server(Env *env, string host) {
 				if (*l != *r && *l != "0")
 					is_inrange = false;
 			}
-			if (is_inrange == true)
-				inrange.push_back(*sit);
+			if (is_inrange)
+				inrange.push_back(*server);
 		}
 	}
 	if (exact.size() == 0) {
-		for (std::vector< Server * >::iterator sit = inrange.begin();
-			 sit < inrange.end(); sit++) {
-			if (host == (*sit)->getName())
-				return *sit;
+		for (std::vector< Server * >::iterator server = inrange.begin();
+			 server < inrange.end(); server++) {
+			if (host == (*server)->getName())
+				return *server;
 		}
 		return inrange.front();
 	} else {
-		for (std::vector< Server * >::iterator sit = exact.begin();
-			 sit < exact.end(); sit++) {
-			if (host == (*sit)->getName())
-				return *sit;
+		for (std::vector< Server * >::iterator server = exact.begin();
+			 server < exact.end(); server++) {
+			if (host == (*server)->getName())
+				return *server;
 		}
 		return exact.front();
 	}

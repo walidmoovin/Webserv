@@ -4,14 +4,11 @@
 class Route {
   protected:
 	Server *_server;
-	string	_location;
-	string	_root;
-	string	_ret;
+	string	_location, _root, _ret;
 	bool	_autoindex;
 
   public:
-	vec_string				   _indexs;
-	vec_string				   _allowed_methods;
+	vec_string				   _indexs, _allowed_methods;
 	std::map< string, string > _cgi;
 	int						   _client_max_body_size;
 

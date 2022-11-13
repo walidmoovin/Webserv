@@ -51,15 +51,17 @@ string Route::getLocation(void) { return _location; }
 string Route::getRoot(void) { return _root; }
 string Route::getReturn(void) { return _ret; }
 /* |==========|
- * Find either an autoindex or an index into the directory required by request
+ * Generate the autoindex of folder.
+ * If while generating it an index file is found, it return the opened file.
+ * Else it finish generating autoindex and return it finally if autoindex is
+ * enable on this route.
  *
- * Input: The uri client asked, the real local path to the directory
- * Output: The file or the autoindex page to display
+ * Input: The uri client asked and the real local path to the directory
+ * Output: The index or the autoindex page to display
  */
 
 string Route::getIndex(string uri, string path) {
-	std::stringstream	 content;
-	std::stringstream	 ret;
+	std::stringstream	 body, ret;
 	DIR					*dir;
 	struct dirent		*entry;
 	struct stat			 info;
@@ -68,9 +70,9 @@ string Route::getIndex(string uri, string path) {
 	if ((dir = opendir(path.c_str())) == NULL) {
 		return "";
 	} else {
-		cout << "get index(): path=" << path << "\n";
-		content << "<h3 style=\"text-align: center;\">" << path
-				<< " files :</h3>\n<ul>\n";
+		// cout << "get index(): path=" << path << "\n";
+		body << "<h3 style=\"text-align: center;\">" << path
+			 << " files :</h3>\n<ul>\n";
 		while ((entry = readdir(dir)) != NULL) {
 			if (entry->d_name[0] == '.')
 				continue;
@@ -78,21 +80,21 @@ string Route::getIndex(string uri, string path) {
 				if (entry->d_name == *it)
 					return (read_file(path + "/" + *it));
 			}
-			content << "<li><a href=\"" << uri + "/" + entry->d_name << "\">"
-					<< entry->d_name << "</a></li>\n";
+			body << "<li><a href=\"" << uri + "/" + entry->d_name << "\">"
+				 << entry->d_name << "</a></li>\n";
 			if (stat(path.c_str(), &info) != 0)
 				std::cerr << "stat() error on " << path << ": "
 						  << strerror(errno) << "\n";
 		}
-		content << "</ul>";
+		body << "</ul>";
 		closedir(dir);
 	}
 	if (!_autoindex)
 		return "";
-	cout << "Getting autoindex\n";
+	// cout << "Getting autoindex\n";
 	ret << "Content-type: text/html \r\n";
-	ret << "Content-length: " << content.str().length() << "\r\n";
-	ret << "\r\n" << content.str();
+	ret << "Content-length: " << body.str().length() << "\r\n";
+	ret << "\r\n" << body.str();
 	return ret.str();
 }
 /* |==========|
@@ -104,24 +106,21 @@ string Route::getIndex(string uri, string path) {
 
 string Route::correctUri(string uri) {
 	std::stringstream	 ret;
-	vec_string::iterator it;
-	vec_string::iterator it2;
+	vec_string::iterator loc_word, uri_word;
 
+	vec_string loc_words = split(_location, "/");
+	vec_string uri_words = split(uri, "/");
+	uri_word = uri_words.begin();
+	for (loc_word = loc_words.begin(); loc_word < loc_words.end(); loc_word++) {
+		while (uri_word < uri_words.end() && *uri_word == "")
+			uri_word++;
+		while (loc_word < loc_words.end() && *loc_word == "")
+			loc_word++;
+		if (loc_word != loc_words.end())
+			uri_word++;
+	}
 	ret << "./" << _root;
-	vec_string loc_split = split(_location, "/");
-	vec_string uri_split = split(uri, "/");
-	it2 = uri_split.begin();
-	for (it = loc_split.begin(); it < loc_split.end(); it++) {
-		while (it2 < uri_split.end() && *it2 == "")
-			it2++;
-		while (it < loc_split.end() && *it == "")
-			it++;
-		if (it != loc_split.end())
-			it2++;
-	}
-
-	while (it2 < uri_split.end()) {
-		ret << "/" << *(it2++);
-	}
+	while (uri_word < uri_words.end())
+		ret << "/" << *(uri_word++);
 	return ret.str();
 }

@@ -33,7 +33,6 @@ Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 		}
 	}
 }
-
 /* Get the server name (_server_name)*/
 
 string Server::getName(void) { return _name; }
@@ -46,31 +45,31 @@ string Server::getName(void) { return _name; }
 
 Master *Server::create_master(string str) {
 	ip_port_t listen = get_ip_port_t(str);
-	if (listen.ip.at(0) == '[') {
+	if (listen.ip.at(0) != '[') {
+		try {
+			_listens.push_back(listen);
+			Master *sock = new Master(listen);
+			return (sock);
+		} catch (std::exception &e) {
+			std::cerr << e.what() << '\n';
+		}
+	} else
 		cout << "Listen: IPv6 isn't supported\n";
-	}
-	try {
-		_listens.push_back(listen);
-		Master *sock = new Master(listen);
-		return (sock);
-	} catch (std::exception &e) {
-		std::cerr << e.what() << '\n';
-		return NULL;
-	}
+	return NULL;
 }
 /*|===========|
  * Create server's defined sockets:
  *
  * Input: A server block node from JSONParser.
- * Output: A vector containing all the succesfull created sockets using listens
- * from the server block.
+ * Output: A vector containing all the succesfull created sockets using
+ * listens from the server block.
  */
 
 std::vector< Master * > Server::get_sockets(JSONNode *server) {
 	JSONObject				datas = server->obj();
 	std::vector< Master * > ret;
-	ip_port_t				listen;
 	Master				   *tmp;
+	ip_port_t				listen;
 	if (datas["listens"]) {
 		JSONList listens = datas["listens"]->lst();
 		for (JSONList::iterator it = listens.begin(); it != listens.end();
@@ -86,27 +85,27 @@ std::vector< Master * > Server::get_sockets(JSONNode *server) {
  * Choose the route an uri asked to the server must lead to.
  *
  * Intput: The uri asked by the client to the server.
- * Output: The route object choosen or the server itself if no location block is
- * adapted.
+ * Output: The route object choosen or the server itself if no location
+ * block is adapted.
  */
 
 Route *Server::choose_route(string uri) {
-	vec_string req = split(uri, "/");
-	vec_string root;
-	for (std::map< string, Route * >::iterator rit = _routes.begin();
-		 rit != _routes.end(); rit++) {
-		root = split((*rit).first, "/");
-		cout << "Route: " << (*rit).first << "\n";
-		vec_string::iterator root_it = root.begin();
-		for (vec_string::iterator it = req.begin(); it < req.end(); it++) {
-			while (it != req.end() && *it == "")
-				it++;
-			if (*it != *(root_it++))
+	vec_string uri_words, loc_words;
+	uri_words = split(uri, "/");
+	for (std::map< string, Route * >::iterator loc_it = _routes.begin();
+		 loc_it != _routes.end(); loc_it++) {
+		loc_words = split((*loc_it).first, "/");
+		vec_string::iterator loc_word = loc_words.begin();
+		for (vec_string::iterator uri_word = uri_words.begin();
+			 uri_word < uri_words.end(); uri_word++) {
+			while (uri_word != uri_words.end() && *uri_word == "")
+				uri_word++;
+			if (*uri_word != *(loc_word++))
 				break;
-			while (root_it != root.end() && *root_it == "")
-				root_it++;
-			if (root_it == root.end())
-				return ((*rit).second);
+			while (loc_word != loc_words.end() && *loc_word == "")
+				loc_word++;
+			if (loc_word == loc_words.end())
+				return ((*loc_it).second);
 		}
 	}
 	return this;
