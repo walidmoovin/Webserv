@@ -23,7 +23,7 @@
 			"cgi": {
 				".php": "/usr/bin/php-cgi"
 			},
-			"client_max_body_size": 100,
+			"client_max_body_size": 10000,
 			"locations": {
 				"docs/": {
 					"root": "public/documents/",

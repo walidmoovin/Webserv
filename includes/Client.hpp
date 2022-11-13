@@ -12,7 +12,7 @@ class Client {
 	string _uri;
 	string _host;
 	int	   _len;
-	int	   _last_len;
+	bool   _last_chunk;
 
 	Server *_server;
 	Route  *_route;

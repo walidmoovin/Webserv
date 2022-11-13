@@ -102,7 +102,7 @@ void Master::refresh(Env *env) {
 				delete (*it);
 				_childs.erase(it);
 			} else {
-				// cout << "Paquet:\n-|" << buffer << "|-\n";
+				// print_block("Paquet: ", buffer);
 				if ((*it)->getHeader(env, buffer))
 					(*it)->answer();
 			}

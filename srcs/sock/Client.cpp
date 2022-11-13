@@ -21,7 +21,7 @@ void Client::clean(void) {
 	_uri = "";
 	_host = "";
 	_len = 0;
-	_last_len = -1;
+	_last_chunk = false;
 
 	_header = "";
 	_body = "";
@@ -43,7 +43,7 @@ bool Client::getHeader(Env *env, string paquet) {
 			paquet.clear();
 		_header += *it + (it + 1 != lines.end() ? "\r\n" : "");
 		if (_header.find("\r\n\r\n") != string::npos) {
-			cout << "Header: \n-|" << _header << "|-\n";
+			print_block("Header: ", _header);
 			if (!this->parseHeader(env))
 				return false;
 			if (header_pick("Method:", 0) == "GET" ||
@@ -70,27 +70,27 @@ bool Client::getBody(string paquet) {
 		if ((*it).length() && _len <= 0 &&
 			header_pick("Transfer-Encoding:", 0) == "chunked") {
 			_len = std::strtol((*it).c_str(), 0, 16) + 2;
-			_last_len = _len - 2;
+			_last_chunk = _len == 2 ? true : false;
 			// +2 for the final \r\n closing chunk
 		} else if (_len > 0 || it != lines.begin()) {
 			_body += *it + "\r\n";
 			_len -= ((*it).length() + 2);
 		}
 		cout << "Remaining chunk length: " << _len << "\n";
-		cout << "Previous chunk length: " << _last_len << "\n";
+		cout << "Is it last chunk ? " << _last_chunk << "\n";
 	}
 	if (_body.size())
 		_body.resize(_body.length() - 2);
 	_len += 2;
 	cout << "Remaining chunk characters: " << _len << "\n";
-	if (_last_len == 0 && _len == 0) {
-		cout << "Content:\n-|" << _body << "|-\n";
+	if (_last_chunk && _len == 0) {
+		print_block("Body: ", _body);
 		return true;
 	}
 	string content_length = header_pick("Content_Length:", 0);
 	if (content_length != "" &&
 		std::strtoul(content_length.c_str(), 0, 10) <= _body.length()) {
-		cout << "Content:\n-|" << _body << "|-\n";
+		print_block("Body: ", _body);
 		return true;
 	}
 	return false;
@@ -125,7 +125,7 @@ bool Client::parseHeader(Env *env) {
 	string len = header_pick("Content-Length:", 0).c_str();
 	if (len != "") {
 		_len = std::atoi(len.c_str());
-		_last_len = 0;
+		_last_chunk = true;
 		if (_len > _route->_client_max_body_size) {
 			send_error(413);
 			return false;
@@ -268,7 +268,7 @@ void Client::send_error(int error_code) {
 
 void Client::send_answer(string msg) {
 #ifdef __linux__
-	cout << "Answer: \n-|" << msg << "|-\n";
+	print_block("Answer: ", msg);
 	send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 #elif __APPLE__
 	send(_fd, msg.c_str(), msg.length(), 0);

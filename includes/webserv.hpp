@@ -49,6 +49,7 @@ class Client;
 typedef std::map< string, JSONNode * > JSONObject;
 typedef std::vector< JSONNode * >	   JSONList;
 
+// tools
 void				 *ft_memset(void *b, int c, size_t len);
 bool				  isInt(string str);
 std::vector< string > split(string str, string delim);
@@ -56,6 +57,9 @@ ip_port_t			  get_ip_port_t(string listen);
 ip_port_t			  get_ip_port_t(string ip, int port);
 string				  getMime(string path);
 string				  read_file(string path);
+
+// debug
+void print_block(string name, string content);
 
 #include "Client.hpp"
 #include "Master.hpp"
