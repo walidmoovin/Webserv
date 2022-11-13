@@ -17,7 +17,5 @@ class Master {
 
 	ip_port_t	  _listen;
 	static fd_set _readfds;
-	static int	  _max_fd;
-	static int	  _min_fd;
-	static int	  _amount;
+	static int	  _max_fd, _min_fd, _amount;
 };

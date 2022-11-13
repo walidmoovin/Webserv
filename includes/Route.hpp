@@ -10,8 +10,8 @@ class Route {
 	bool	_autoindex;
 
   public:
-	std::vector< string >	   _indexs;
-	std::vector< string >	   _allowed_methods;
+	vec_string				   _indexs;
+	vec_string				   _allowed_methods;
 	std::map< string, string > _cgi;
 	int						   _client_max_body_size;
 

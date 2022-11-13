@@ -1,5 +1,7 @@
 #include "webserv.hpp"
 
+inline string get_extension(string str) { return str.substr(str.rfind('.')); }
+
 Client::Client(int fd, ip_port_t ip_port, Master *parent)
 	: _fd(fd), _ip_port(ip_port), _parent(parent) {
 	clean();
@@ -16,15 +18,9 @@ Client::~Client(void) {
 void Client::clean(void) {
 	_server = NULL;
 	_route = NULL;
-
-	_method = "";
-	_uri = "";
-	_host = "";
+	_method = _uri = _host = _header = _body = "";
 	_len = 0;
 	_last_chunk = false;
-
-	_header = "";
-	_body = "";
 	_request.clear();
 }
 
@@ -33,9 +29,8 @@ bool Client::getHeader(Env *env, string paquet) {
 		send_error(403);
 	if (header_pick("Method:", 0) != "")
 		return getBody(paquet);
-	std::vector< string > lines = split(paquet, "\r\n");
-	for (std::vector< string >::iterator it = lines.begin(); it < lines.end();
-		 it++) {
+	vec_string lines = split(paquet, "\r\n");
+	for (vec_string::iterator it = lines.begin(); it < lines.end(); it++) {
 		size_t pos = paquet.find("\r\n");
 		if (pos != string::npos)
 			paquet.erase(0, pos + 2);
@@ -43,30 +38,23 @@ bool Client::getHeader(Env *env, string paquet) {
 			paquet.clear();
 		_header += *it + (it + 1 != lines.end() ? "\r\n" : "");
 		if (_header.find("\r\n\r\n") != string::npos) {
-			print_block("Header: ", _header);
+			print_block("HEADER: ", _header);
 			if (!this->parseHeader(env))
 				return false;
-			if (header_pick("Method:", 0) == "GET" ||
-				header_pick("Method:", 0) == "HEAD")
-				return true;
-			else if (paquet.length() > 0) {
-				// cout << "Remaining paquet: " << paquet.length() << "\n";
+			if (paquet.length() > 0)
 				return getBody(paquet);
-			}
-			cout << "next: " << *it << "\n";
-			cout << "paquet length remain: " << paquet.length() << "\n";
+			return true;
 		}
 	}
 	return false;
 }
 
 bool Client::getBody(string paquet) {
-	std::vector< string >			lines = split(paquet, "\r\n");
-	std::vector< string >::iterator it;
-	cout << paquet << "\n";
+	vec_string			 lines = split(paquet, "\r\n");
+	vec_string::iterator it;
 
 	for (it = lines.begin(); it < lines.end(); it++) {
-		cout << "line: " << *it << "\n";
+		// cout << "line: " << *it << "\n";
 		if ((*it).length() && _len <= 0 &&
 			header_pick("Transfer-Encoding:", 0) == "chunked") {
 			_len = std::strtol((*it).c_str(), 0, 16) + 2;
@@ -76,32 +64,28 @@ bool Client::getBody(string paquet) {
 			_body += *it + "\r\n";
 			_len -= ((*it).length() + 2);
 		}
-		cout << "Remaining chunk length: " << _len << "\n";
-		cout << "Is it last chunk ? " << _last_chunk << "\n";
 	}
 	if (_body.size())
 		_body.resize(_body.length() - 2);
 	_len += 2;
-	cout << "Remaining chunk characters: " << _len << "\n";
 	if (_last_chunk && _len == 0) {
-		print_block("Body: ", _body);
+		print_block("BODY: ", _body);
 		return true;
 	}
 	return false;
 }
 
 bool Client::parseHeader(Env *env) {
-	std::vector< string > lines = split(_header, "\r\n");
-	std::vector< string > method = split(lines.at(0), " ");
-	_request["Method:"] = method;
+	vec_string lines, method, line;
 
-	std::vector< string > line;
+	lines = split(_header, "\r\n");
+	method = split(lines.at(0), " ");
+	_request["Method:"] = method;
 	if (lines.size() > 0) {
-		for (std::vector< string >::iterator it = lines.begin() + 1;
-			 it < lines.end(); it++) {
+		for (vec_string::iterator it = lines.begin() + 1; it < lines.end();
+			 it++) {
 			line = split(*it, " ");
-			_request[line.at(0)] =
-				std::vector< string >(line.begin() + 1, line.end());
+			_request[line.at(0)] = vec_string(line.begin() + 1, line.end());
 		}
 	}
 	if ((method.at(0) == "POST" || method.at(0) == "PUT") &&
@@ -128,8 +112,8 @@ bool Client::parseHeader(Env *env) {
 	return true;
 }
 
-bool Client::check_method() {
-	std::vector< string > allowed;
+bool Client::check_method(void) {
+	vec_string allowed;
 	if (_method != "GET" && _method != "POST" && _method != "DELETE" &&
 		_method != "PUT")
 		send_error(405);
@@ -154,9 +138,7 @@ string Client::header_pick(string key, size_t id) {
 	return _request[key].at(id);
 }
 
-inline string get_extension(string str) { return str.substr(str.rfind('.')); }
-
-void Client::answer() {
+void Client::answer(void) {
 	cout << "Method: " << _method << "\n";
 	cout << "URI: " << _uri << "\n";
 	cout << "Host: " << _host << "\n";
@@ -229,16 +211,15 @@ void Client::send_cgi(string cgi, string path) {
 	   << ret;
 	send_answer(ss.str());
 }
-/*
+
 void Client::send_redir(int redir_code, string opt) {
 	switch (redir_code) {
 	case 301:
 		return send_answer(
-			"HTTTP/1.1 301 Moved Permanently\r\nLocation: " + opt +
-"\r\n\r\n");
+			"HTTTP/1.1 301 Moved Permanently\r\nLocation: " + opt + "\r\n\r\n");
 	}
 }
-*/
+
 void Client::send_error(int error_code) {
 	switch (error_code) {
 	case 400:
@@ -262,7 +243,7 @@ void Client::send_error(int error_code) {
 
 void Client::send_answer(string msg) {
 #ifdef __linux__
-	print_block("Answer: ", msg);
+	print_block("ANSWER: ", msg);
 	send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 #elif __APPLE__
 	send(_fd, msg.c_str(), msg.length(), 0);

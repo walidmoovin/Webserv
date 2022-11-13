@@ -128,8 +128,8 @@ void Master::refresh(Env *env) {
 Server *Master::choose_server(Env *env, string host) {
 	std::vector< Server * > exact;
 	std::vector< Server * > inrange;
-	std::vector< string >	ip_listen;
-	std::vector< string >	ip_required;
+	vec_string				ip_listen;
+	vec_string				ip_required;
 
 	ip_required = split(_listen.ip, ".");
 	for (std::vector< Server * >::iterator sit = env->_servers.begin();
@@ -145,8 +145,8 @@ Server *Master::choose_server(Env *env, string host) {
 			}
 			bool is_inrange = true;
 			ip_listen = split((*it).ip, ".");
-			std::vector< string >::iterator r = ip_required.begin();
-			for (std::vector< string >::iterator l = ip_listen.end();
+			vec_string::iterator r = ip_required.begin();
+			for (vec_string::iterator l = ip_listen.end();
 				 l >= ip_listen.begin(); --l) {
 				if (*l != *r && *l != "0")
 					is_inrange = false;

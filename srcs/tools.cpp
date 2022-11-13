@@ -18,7 +18,7 @@ bool isInt(string str) {
 	return true;
 }
 
-std::vector< string > split(string str, string delim) {
+vec_string split(string str, string delim) {
 	string					   temp(str);
 	string					   token;
 	size_t					   pos;

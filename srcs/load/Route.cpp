@@ -58,12 +58,12 @@ string Route::getReturn(void) { return _ret; }
  */
 
 string Route::getIndex(string uri, string path) {
-	std::stringstream				content;
-	std::stringstream				ret;
-	DIR							   *dir;
-	struct dirent				   *entry;
-	struct stat						info;
-	std::vector< string >::iterator it;
+	std::stringstream	 content;
+	std::stringstream	 ret;
+	DIR					*dir;
+	struct dirent		*entry;
+	struct stat			 info;
+	vec_string::iterator it;
 
 	if ((dir = opendir(path.c_str())) == NULL) {
 		return "";
@@ -103,13 +103,13 @@ string Route::getIndex(string uri, string path) {
  */
 
 string Route::correctUri(string uri) {
-	std::stringstream				ret;
-	std::vector< string >::iterator it;
-	std::vector< string >::iterator it2;
+	std::stringstream	 ret;
+	vec_string::iterator it;
+	vec_string::iterator it2;
 
 	ret << "./" << _root;
-	std::vector< string > loc_split = split(_location, "/");
-	std::vector< string > uri_split = split(uri, "/");
+	vec_string loc_split = split(_location, "/");
+	vec_string uri_split = split(uri, "/");
 	it2 = uri_split.begin();
 	for (it = loc_split.begin(); it < loc_split.end(); it++) {
 		while (it2 < uri_split.end() && *it2 == "")
