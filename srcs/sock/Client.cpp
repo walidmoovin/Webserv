@@ -87,12 +87,6 @@ bool Client::getBody(string paquet) {
 		print_block("Body: ", _body);
 		return true;
 	}
-	string content_length = header_pick("Content_Length:", 0);
-	if (content_length != "" &&
-		std::strtoul(content_length.c_str(), 0, 10) <= _body.length()) {
-		print_block("Body: ", _body);
-		return true;
-	}
 	return false;
 }
 
