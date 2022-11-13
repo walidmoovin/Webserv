@@ -96,6 +96,7 @@ Route *Server::choose_route(string uri) {
 	for (std::map< string, Route * >::iterator rit = _routes.begin();
 		 rit != _routes.end(); rit++) {
 		root = split((*rit).first, "/");
+		cout << "Route: " << (*rit).first << "\n";
 		std::vector< string >::iterator root_it = root.begin();
 		for (std::vector< string >::iterator it = req.begin(); it < req.end();
 			 it++) {

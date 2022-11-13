@@ -64,11 +64,11 @@ string Route::getIndex(string uri, string path) {
 	struct dirent				   *entry;
 	struct stat						info;
 	std::vector< string >::iterator it;
-	cout << "get index(): path=" << path << "\n";
 
-	if ((dir = opendir(path.c_str())) == NULL)
+	if ((dir = opendir(path.c_str())) == NULL) {
 		return "";
-	else {
+	} else {
+		cout << "get index(): path=" << path << "\n";
 		content << "<h3 style=\"text-align: center;\">" << path
 				<< " files :</h3>\n<ul>\n";
 		while ((entry = readdir(dir)) != NULL) {
@@ -89,6 +89,7 @@ string Route::getIndex(string uri, string path) {
 	}
 	if (!_autoindex)
 		return "";
+	cout << "Getting autoindex\n";
 	ret << "Content-type: text/html \r\n";
 	ret << "Content-length: " << content.str().length() << "\r\n";
 	ret << "\r\n" << content.str();

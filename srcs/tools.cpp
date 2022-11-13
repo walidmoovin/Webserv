@@ -226,15 +226,16 @@ string read_file(string path) {
 	string			  str;
 	string			  content;
 	std::stringstream ret;
-	// struct stat		  info;
-	/*if (stat(path.c_str(), &info) != 0 || S_ISDIR(info.st_mode)) {
+	struct stat		  info;
+	if (stat(path.c_str(), &info) != 0) {
 		std::cerr << "stat() error on " << path << ": " << strerror(errno)
 				  << "\n";
-		return "";
-	}*/
+		return "404";
+	} else if (S_ISDIR(info.st_mode))
+		return "404";
 	std::ifstream file(path.c_str());
 	if (!file.good())
-		return "";
+		return "404";
 	while (file) {
 		std::getline(file, str);
 		content += str + "\n";

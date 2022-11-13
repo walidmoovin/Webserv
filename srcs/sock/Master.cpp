@@ -54,8 +54,8 @@ Master::Master(ip_port_t list) : _listen(list) {
 
 void Master::set_fds(void) {
 	FD_SET(_fd, &_readfds);
-
 	int child_fd;
+
 	for (std::vector< Client * >::iterator it = _childs.begin();
 		 it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
@@ -74,7 +74,8 @@ void Master::set_fds(void) {
 void Master::refresh(Env *env) {
 	int	 valread;
 	int	 addrlen = sizeof(_address);
-	char buffer[10000];
+	char buffer[1000000];
+
 	if (FD_ISSET(_fd, &_readfds)) {
 		int new_socket =
 			accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
@@ -93,16 +94,18 @@ void Master::refresh(Env *env) {
 		 it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
 		if (FD_ISSET(child_fd, &_readfds)) {
-			valread = read(child_fd, buffer, 10000);
+			valread = read(child_fd, buffer, 1000000);
 			buffer[valread] = '\0';
 			if (valread == 0) {
 				getpeername(child_fd, (struct sockaddr *)&_address,
 							(socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
-				//} else if ((*it)->getRequest(env, buffer))
-			} else if ((*it)->getHeader(env, buffer) && (*it)->getBody(buffer))
-				(*it)->answer();
+			} else {
+				// cout << "Paquet:\n-|" << buffer << "|-\n";
+				if ((*it)->getHeader(env, buffer))
+					(*it)->answer();
+			}
 		}
 	}
 }
@@ -131,11 +134,9 @@ Server *Master::choose_server(Env *env, string host) {
 	ip_required = split(_listen.ip, ".");
 	for (std::vector< Server * >::iterator sit = env->_servers.begin();
 		 sit < env->_servers.end(); sit++) {
-
 		std::vector< ip_port_t > serv_listens = (*sit)->_listens;
 		for (std::vector< ip_port_t >::iterator it = serv_listens.begin();
 			 it < serv_listens.end(); it++) {
-
 			if (_listen.port != (*it).port)
 				continue;
 			if (_listen.ip == (*it).ip) {
