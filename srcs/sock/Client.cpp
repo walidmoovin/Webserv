@@ -27,6 +27,7 @@ void Client::clean(void) {
 bool Client::getHeader(Env *env, string paquet) {
 	if (paquet.length() < 1)
 		send_error(403);
+	print_block("Paquet: ", paquet);
 	if (header_pick("Method:", 0) != "")
 		return getBody(paquet);
 	vec_string lines = split(paquet, "\r\n");
@@ -40,7 +41,7 @@ bool Client::getHeader(Env *env, string paquet) {
 		if (_header.find("\r\n\r\n") != string::npos)
 			return !this->parseHeader(env)
 					   ? false
-					   : (paquet.length() > 0 ? getBody(paquet) : true);
+					   : (_len != 0 ? getBody(paquet) : true);
 	}
 	return false;
 }
@@ -50,6 +51,8 @@ bool Client::getBody(string paquet) {
 	vec_string::iterator it;
 
 	for (it = lines.begin(); it < lines.end(); it++) {
+		if (DEBUG)
+			cout << "Remaining length: " << _len << "\n";
 		if ((*it).length() && _len <= 0 &&
 			header_pick("Transfer-Encoding:", 0) == "chunked") {
 			_len = std::strtol((*it).c_str(), 0, 16) + 2;
@@ -68,6 +71,8 @@ bool Client::getBody(string paquet) {
 bool Client::parseHeader(Env *env) {
 	vec_string lines, method, line;
 
+	if (DEBUG)
+		cout << "Parsing header...\n";
 	lines = split(_header, "\r\n");
 	method = split(lines.at(0), " ");
 	_request["Method:"] = method;
@@ -78,38 +83,44 @@ bool Client::parseHeader(Env *env) {
 			_request[line.at(0)] = vec_string(line.begin() + 1, line.end());
 		}
 	}
-	if ((method.at(0) == "POST" || method.at(0) == "PUT") &&
-		header_pick("Content-Length:", 0) == "" &&
-		header_pick("Transfer-Encoding:", 0) != "chunked") {
-		send_error(400);
-		return false;
-	}
-
 	_method = header_pick("Method:", 0);
-	_uri = header_pick("Method:", 1);
+	if ((_method == "POST" || _method == "PUT") &&
+		header_pick("Content-Length:", 0) == "" &&
+		header_pick("Transfer-Encoding:", 0) != "chunked")
+		return (send_error(400), false);
+	vec_string uri_split = split(header_pick("Method:", 1), "?");
+	_uri = uri_split.at(0);
+	if (uri_split.size() > 1)
+		_query = uri_split.at(1);
 	_host = header_pick("Host:", 0);
+	_env	= env;
 	_server = _parent->choose_server(env, _host);
 	_route = _server->choose_route(_uri);
+	if (DEBUG)
+		print_header();
 	string len = header_pick("Content-Length:", 0).c_str();
 	if (len != "") {
 		_len = std::atoi(len.c_str());
 		_last_chunk = true;
-		if (_len > _route->_client_max_body_size)
+		int max_len = _route->_client_max_body_size >= 0 ? _route->_client_max_body_size : _server->_client_max_body_size >= 0 ? _server->_client_max_body_size : INT_MAX;
+		if (_len > max_len)
 			return (send_error(413), false);
-	}
+	} else
+		_len = 0;
 	return true;
 }
 
 bool Client::check_method(void) {
 	vec_string allowed;
-	if ((allowed = _route->_allowed_methods).size() > 0 ||
-		(allowed = _server->_allowed_methods).size() > 0)
+	if ((_route && (allowed = _route->_allowed_methods).size() > 0) ||
+		(_server && (allowed = _server->_allowed_methods).size() > 0) ||
+		((allowed = _env->_allowed_methods).size() > 0))
 		return std::find(allowed.begin(), allowed.end(), _method) <
 					   allowed.end()
 				   ? true
 				   : false;
-	else if (_method == "GET" || _method == "POST" || _method != "DELETE" ||
-			 _method != "PUT")
+	else if (_method == "GET" || _method == "POST" || _method == "DELETE" ||
+			 _method == "PUT")
 		return (true);
 	return (false);
 }
@@ -126,20 +137,25 @@ void Client::answer(void) {
 	string cgi = _route->_cgi.size()	? _route->_cgi[get_extension(path)]
 				 : _server->_cgi.size() ? _server->_cgi[get_extension(path)]
 										: "";
-	cout << "Path: " << path << "\n";
-	if (_method == "PUT")
-		create_file(path);
-	if (cgi != "")
-		send_cgi(cgi, path);
-	else if (!check_method())
+	if (DEBUG)
+		cout << "Path: " << path << "\n";
+	if (!check_method())
 		send_error(405);
 	else {
 		if ((ret = _route->getIndex(_uri, path)) == "")
 			ret = read_file(path);
-		if (ret == "404")
-			send_error(404);
+		if (ret == "404") {
+			if (_method == "POST" || _method == "PUT")
+				create_file(path);
+			else
+				send_error(404);
+		}
 		else if (ret == "403")
 			send_error(403);
+		else if (_method == "DELETE")
+			std::remove(path.c_str());
+		else if (cgi != "")
+			send_cgi(cgi, path);
 		else
 			send_answer("HTTP/1.1 200 OK\r\n" + ret);
 	}
@@ -170,10 +186,12 @@ void Client::send_cgi(string cgi, string path) {
 		args[0] = cgi.c_str();
 		args[1] = path.c_str();
 		args[2] = NULL;
-		string		 path_info = "PATH_INFO=" + _route->getRoot();
-		const char **env = new const char *[path_info.length() + 1];
+		string		path_info = "PATH_INFO=" + _route->getRoot();
+		string		query = "QUERY_STRING=" + _query;
+		const char **env = new const char *[path_info.length() + query.length() + 2];
 		env[0] = path_info.c_str();
-		env[1] = NULL;
+		env[1] = query.c_str();
+		env[2] = NULL;
 		dup2(fd[1], STDOUT_FILENO);
 		close(fd[1]);
 		close(fd[0]);

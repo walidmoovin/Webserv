@@ -1,27 +1,21 @@
 {
 	"root_folder": "./www",
+	"allowed_methods": ["GET", "POST", "PUT", "DELETE"],
 	"servers": [
 		{
 			"server_name": "localhost",
-			"listens": [
-				"localhost:8080"
-			],
+			"listens": ["localhost:8080"],
 			"root": "public/",
 			"return": "301 https://$host$uri"
 		},
 		{
 			"server_name": "localhost",
-			"listens": [
-				"192.168.62.61:8080",
-				"localhost",
-				"555"
-			],
+			"listens": ["192.168.62.61:8080", "localhost", "555"],
 			"root": "public/testsite",
-			"indexs": [
-				"basique.html"
-			],
+			"indexs": ["basique.html"],
 			"cgi": {
-				".php": "/usr/bin/php-cgi"
+				".php": "/usr/bin/php",
+				".py": "/usr/bin/python"
 			},
 			"client_max_body_size": 10000,
 			"locations": {

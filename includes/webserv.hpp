@@ -1,6 +1,6 @@
 #pragma once
 
-#define DEBUG 0
+#define DEBUG 1
 
 #include <arpa/inet.h>
 #include <dirent.h>

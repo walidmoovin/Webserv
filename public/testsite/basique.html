@@ -12,22 +12,28 @@
     <button class="first"
         style="height: 50px; font-size: 20px; background-color: rgb(0, 255, 85); color: white;">CLIQUEZ ICI POUR VOIR
         VOTRE CADEAU</button>
-    <script>
-        const button1 = document.querySelector('button.first');
-        button1.addEventListener('click', function () {
-            alert('PRANK hahaha, cliquez sur le bouton en bas de la page pour voir le vrai cadeau');
-            document.querySelector('body').innerHTML = '<button class ="second" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; font-size: 20px; background-color: red; color: white;">CLIQUEZ ICI POUR VOIR VOTRE VRAI CADEAU</button>';
-            const button2 = document.querySelector('button.second');
-            button2.addEventListener('click', function () {
-                document.querySelector('body').innerHTML = '<img src="./monkey.gif" style="width: 100%; height: 100%;">';
-            });
-        });
-    </script>
     <ul>
         <li><a href="/docs/">Documentss</a></li>
         <li><a href="/img/">Images</a></li>
         <li><a href="/index.php">php-cgi test</a></li>
     </ul>
+
+	<h1> Query and python cgi test </h1>
+	<form action = "/index.py" method = "get">
+		First Name: <input type = "text" name = "first_name">  <br />
+
+		Last Name: <input type = "text" name = "last_name" />
+		<input type = "submit" value = "Submit" />
+	</form>
+
+	<h1> File Creation test: </h1>
+	<form action="/" method="post" enctype="text/plain">
+	Filename: <input type="text" id="changeAction" />
+	Content: <input name="content" type="text">
+	<button type="submit">Create file</button>
+	</form>
+
+	<h1> Forms tests: </h1>
     <form action="/" method="post" enctype="multipart/form-data">
         <input type="text" name="description" value="form-data" />
         <input type="file" name="myFile" />
@@ -37,6 +43,24 @@
         <input type="text" name="description" value="UrlEncode" />
         <button type="submit">Submit</button>
     </form>
+
+	<script>
+        const button1 = document.querySelector('button.first');
+        button1.addEventListener('click', function () {
+            alert('PRANK hahaha, cliquez sur le bouton en bas de la page pour voir le vrai cadeau');
+            document.querySelector('body').innerHTML = '<button class ="second" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; font-size: 20px; background-color: red; color: white;">CLIQUEZ ICI POUR VOIR VOTRE VRAI CADEAU</button>';
+            const button2 = document.querySelector('button.second');
+            button2.addEventListener('click', function () {
+                document.querySelector('body').innerHTML = '<img src="./monkey.gif" style="width: 100%; height: 100%;">';
+            });
+        });
+		const actionUpdater = document.querySelector("#changeAction");
+		actionUpdater.addEventListener("change", () => {
+			const parent = actionUpdater.parentElement;
+
+			parent.action = actionUpdater.value;
+		});
+	</script>
 </body>
 
 </html>

@@ -14,6 +14,8 @@ Route::Route(Server *server, string location, JSONNode *datas)
 	: _server(server), _location(location) {
 	JSONObject object = datas->obj();
 	JSONNode  *tmp;
+	_autoindex = false;
+	_client_max_body_size = -1;
 	if ((tmp = object["root"]))
 		_root = tmp->str();
 	if ((tmp = object["return"]))
@@ -70,7 +72,8 @@ string Route::getIndex(string uri, string path) {
 	if ((dir = opendir(path.c_str())) == NULL) {
 		return "";
 	} else {
-		// cout << "get index(): path=" << path << "\n";
+		if (DEBUG)
+			cout << "get index(): path=" << path << "\n";
 		body << "<h3 style=\"text-align: center;\">" << path
 			 << " files :</h3>\n<ul>\n";
 		while ((entry = readdir(dir)) != NULL) {
@@ -91,7 +94,8 @@ string Route::getIndex(string uri, string path) {
 	}
 	if (!_autoindex)
 		return "";
-	// cout << "Getting autoindex\n";
+	if (DEBUG)
+		cout << "Getting autoindex\n";
 	ret << "Content-type: text/html \r\n";
 	ret << "Content-length: " << body.str().length() << "\r\n";
 	ret << "\r\n" << body.str();

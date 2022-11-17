@@ -25,13 +25,25 @@ Env::~Env() {
  */
 Env::Env(JSONNode *conf) {
 	try {
-		JSONList servers = conf->obj()["servers"]->lst();
-		for (std::vector< JSONNode * >::iterator it = servers.begin();
-			 it < servers.end(); it++) {
-			Server *server = new Server(*it);
-			_servers.push_back(server);
-			std::vector< Master * > tmp_s = server->get_sockets(*it);
-			_masters.insert(_masters.end(), tmp_s.begin(), tmp_s.end());
+		JSONNode *node;
+		JSONList lst;
+		if ((node = conf->obj()["servers"]))
+		{
+			lst = conf->obj()["servers"]->lst();
+			for (std::vector< JSONNode * >::iterator it = lst.begin();
+				 it < lst.end(); it++) {
+				Server *server = new Server(*it);
+				_servers.push_back(server);
+				std::vector< Master * > tmp_s = server->get_sockets(*it);
+				_masters.insert(_masters.end(), tmp_s.begin(), tmp_s.end());
+			}
+		}
+		if ((node = conf->obj()["allowed_methods"])) {
+			JSONList lst = node->lst();
+			for (JSONList::iterator it = lst.begin(); it < lst.end();
+				 it++) {
+				_allowed_methods.push_back((*it)->str());
+			}
 		}
 	} catch (std::exception &e) {
 		std::cerr << e.what() << "\n";

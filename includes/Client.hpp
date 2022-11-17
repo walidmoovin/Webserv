@@ -8,8 +8,9 @@ class Client {
 	ip_port_t _ip_port;
 	Master	 *_parent;
 	Server	 *_server;
+	Env      *_env;
 	Route	 *_route;
-	string	  _method, _uri, _host, _header, _body;
+	string	  _method, _uri, _query, _host, _header, _body;
 	int		  _len;
 	bool	  _last_chunk;
 	request_t _request;
@@ -24,6 +25,8 @@ class Client {
 	void   send_redir(int redir_code, string opt);
 	void   send_error(int error_code);
 	void   send_answer(string msg);
+
+	void	print_header(void);
 
   public:
 	Client(int fd, ip_port_t ip_port, Master *parent);
