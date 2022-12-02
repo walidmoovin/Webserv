@@ -5,9 +5,9 @@
  * delete all routes owned by the server;
  */
 
-Server::~Server(void) {
-	for (std::map< string, Route * >::iterator it = _routes.begin();
-		 it != _routes.end(); it++)
+Server::~Server(void)
+{
+	for (std::map< string, Route * >::iterator it = _routes.begin(); it != _routes.end(); it++)
 		delete (*it).second;
 	cout << "Server destroyed!\n";
 }
@@ -20,14 +20,16 @@ Server::~Server(void) {
  * autoindex ...) and the Server one the others ones (server_name, sub-routes)
  */
 
-Server::Server(JSONNode *server) : Route(NULL, "/", server) {
+Server::Server(JSONNode *server) : Route(NULL, "/", server)
+{
 	JSONObject datas = server->obj();
 	if (datas["server_name"])
 		_name = datas["server_name"]->str();
-	if (datas["locations"]) {
+	if (datas["locations"])
+	{
 		JSONObject locations = datas["locations"]->obj();
-		for (JSONObject::iterator it = locations.begin(); it != locations.end();
-			 it++) {
+		for (JSONObject::iterator it = locations.begin(); it != locations.end(); it++)
+		{
 			Route *route = new Route(this, (*it).first, (*it).second);
 			_routes[(*it).first] = route;
 		}
@@ -43,9 +45,11 @@ string Server::getName(void) { return _name; }
  * Output: a Master socket or NULL if creation failed
  */
 
-Master *Server::create_master(string str) {
+Master *Server::create_master(string str)
+{
 	ip_port_t listen = get_ip_port_t(str);
-	if (listen.ip.at(0) != '[') {
+	if (listen.ip.at(0) != '[')
+	{
 		try {
 			_listens.push_back(listen);
 			Master *sock = new Master(listen);
@@ -64,16 +68,17 @@ Master *Server::create_master(string str) {
  * Output: A vector containing all the succesfull created sockets using
  * listens from the server block.
  */
-
-std::vector< Master * > Server::get_sockets(JSONNode *server) {
+std::vector< Master * > Server::get_sockets(JSONNode *server)
+{
 	JSONObject				datas = server->obj();
 	std::vector< Master * > ret;
 	Master				   *tmp;
 	ip_port_t				listen;
-	if (datas["listens"]) {
+	if (datas["listens"])
+	{
 		JSONList listens = datas["listens"]->lst();
-		for (JSONList::iterator it = listens.begin(); it != listens.end();
-			 it++) {
+		for (JSONList::iterator it = listens.begin(); it != listens.end(); it++)
+		{
 			if ((tmp = create_master((*it)->str())))
 				ret.push_back(tmp);
 		}
@@ -89,15 +94,16 @@ std::vector< Master * > Server::get_sockets(JSONNode *server) {
  * block is adapted.
  */
 
-Route *Server::choose_route(string uri) {
+Route *Server::choose_route(string uri)
+{
 	vec_string uri_words, loc_words;
 	uri_words = split(uri, "/");
-	for (std::map< string, Route * >::iterator loc_it = _routes.begin();
-		 loc_it != _routes.end(); loc_it++) {
+	for (std::map< string, Route * >::iterator loc_it = _routes.begin(); loc_it != _routes.end(); loc_it++)
+	{
 		loc_words = split((*loc_it).first, "/");
 		vec_string::iterator loc_word = loc_words.begin();
-		for (vec_string::iterator uri_word = uri_words.begin();
-			 uri_word < uri_words.end(); uri_word++) {
+		for (vec_string::iterator uri_word = uri_words.begin(); uri_word < uri_words.end(); uri_word++)
+		{
 			while (uri_word != uri_words.end() && *uri_word == "")
 				uri_word++;
 			if (*uri_word != *(loc_word++))

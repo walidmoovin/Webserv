@@ -2,26 +2,23 @@
 
 inline string get_extension(string str) { return str.substr(str.rfind('.')); }
 
-Client::Client(int fd, ip_port_t ip_port, Master *parent)
-	: _fd(fd), _ip_port(ip_port), _parent(parent) {
+Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip_port), _parent(parent) {
 	clean();
-	cout << "New connection, socket fd is " << fd << ", ip is : " << _ip_port.ip
-		 << ", port : " << _ip_port.port << "\n";
+	cout << "New connection, socket fd is " << fd << ", ip is : " << _ip_port.ip << ", port : " << _ip_port.port << "\n";
 }
 
 Client::~Client(void) {
 	close(_fd);
-	cout << "Host disconnected, ip " << _ip_port.ip << ", port "
-		 << _ip_port.port << "\n";
+	cout << "Host disconnected, ip " << this->_ip_port.ip << ", port " << this->_ip_port.port << "\n";
 }
 
 void Client::clean(void) {
-	_server = NULL;
-	_route = NULL;
-	_method = _uri = _host = _header = _body = "";
-	_len = 0;
-	_last_chunk = false;
-	_request.clear();
+	this->_server = NULL;
+	this->_route = NULL;
+	this->_method = this->_uri = this->_host = this->_header = this->_body = "";
+	this->_len = 0;
+	this->_last_chunk = false;
+	this->_request.clear();
 }
 
 bool Client::getHeader(Env *env, string paquet) {
@@ -238,11 +235,13 @@ void Client::send_error(int error_code) {
 }
 
 void Client::send_answer(string msg) {
-#ifdef __linux__
+#ifdef DEBUG
 	print_block("ANSWER: ", msg);
-	send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+#endif
+#ifdef __linux__
+	send(this->_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 #elif __APPLE__
-	send(_fd, msg.c_str(), msg.length(), 0);
+	send(this->_fd, msg.c_str(), msg.length(), 0);
 #endif
 	clean();
 }
