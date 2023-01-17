@@ -6,14 +6,6 @@
 !default.json
 !.gitignore
 
-!public/
-!public/images/
-!public/images/*
-!public/testsite/
-!public/testsite/*
-!public/documents/
-!public/documents/*
-
 !includes/
 !includes/*.hpp
 
@@ -23,3 +15,14 @@
 !srcs/json/
 !srcs/sock/
 !srcs/*/*.cpp
+
+!public/
+!public/*
+!public/*/*
+!public/resources/docs/*
+!public/resources/img/*
+
+!Doxyfile
+!html/
+!html/*
+!html/search/*

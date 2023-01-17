@@ -2,15 +2,15 @@
 #include "webserv.hpp"
 
 class Route {
-  protected:
+protected:
 	Server *_server;
 	string	_location, _root, _ret;
-	bool	_autoindex;
+	bool		_autoindex;
 
-  public:
-	vec_string				   _indexs, _allowed_methods;
-	std::map< string, string > _cgi;
-	int						   _client_max_body_size;
+public:
+	vec_string							 _indexs, _allowed_methods;
+	std::map<string, string> _cgi;
+	int											 _client_max_body_size;
 
 	Route(Server *server, string location, JSONNode *datas);
 	~Route(void);

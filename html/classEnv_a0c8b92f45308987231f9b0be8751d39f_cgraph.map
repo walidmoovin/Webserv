@@ -1,0 +1,5 @@
+<map id="Env::cycle" name="Env::cycle">
+<area shape="rect" id="node1" title="A Wevserv cycle:" alt="" coords="5,31,92,56"/>
+<area shape="rect" id="node2" href="$classEnv.html#a830b6a19d0ab40a20a67155e8e4fb713" title="Refresh all master_sockets and their clients datas (disconnect, new connection, etc...." alt="" coords="140,5,267,31"/>
+<area shape="rect" id="node3" href="$classEnv.html#af4399c7f3d136ce2164dacef42f5c258" title="Append each master_sockets and their clients to list of fds SELECT must look at." alt="" coords="143,55,263,80"/>
+</map>

@@ -8,23 +8,29 @@
 			"root": "public/",
 			"return": "301 https://$host$uri"
 		},
+    {
+      "server_name": "webserv.doc",
+      "listens": ["localhost"],
+      "root": "html/",
+      "indexs": ["index.html"]
+    },
 		{
-			"server_name": "localhost",
+			"server_name": "narnaud.42.fr",
 			"listens": ["192.168.62.61:8080", "localhost", "555"],
-			"root": "public/testsite",
+			"root": "public/html/",
 			"indexs": ["basique.html"],
 			"cgi": {
 				".php": "/usr/bin/php",
-				".py": "/usr/bin/python"
+				".py": "/usr/bin/python
 			},
 			"client_max_body_size": 10000,
 			"locations": {
-				"docs/": {
-					"root": "public/documents/",
+				"/docs/": {
+					"root": "public/resources/",
 					"autoindex": true
 				},
-				"img/": {
-					"root": "public/images/",
+				"/img/": {
+					"root": "public/resources/",
 					"autoindex": true
 				}
 			}

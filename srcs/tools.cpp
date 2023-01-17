@@ -9,17 +9,18 @@ void *ft_memset(void *b, int c, size_t len) {
 	return (b);
 }
 
-bool isInt(string str) {
+bool isAPort(string str) {
+	int n = 0;
 	for (string::iterator it = str.begin(); it < str.end(); it++)
-		if (*it < '0' || *it > '9')
+		if ((*it < '0' || *it > '9') && n++ < 5)
 			return false;
 	return true;
 }
 
 vec_string split(string str, string delim) {
-	string	   temp(str);
-	string	   token;
-	size_t	   pos;
+	string		 temp(str);
+	string		 token;
+	size_t		 pos;
 	vec_string tokens;
 
 	while ((pos = temp.find(delim)) != string::npos) {
@@ -32,13 +33,18 @@ vec_string split(string str, string delim) {
 }
 
 ip_port_t get_ip_port_t(string listen) {
+	size_t sep_pos = listen.rfind(':');
+	if (sep_pos == string::npos) {
+		if (isAPort(listen))
+			return (ip_port_t){0, "0.0.0.0", std::atoi(listen.c_str())};
+		else
+			return (ip_port_t){0, listen == "localhost" ? "127.0.0.1" : listen, 80};
+	}
 	ip_port_t ret;
-	size_t	  sep_pos = listen.rfind(':');
-	string	  tmp = listen.substr(0, sep_pos);
-
-	ret.ip = isInt(tmp) ? "0.0.0.0" : (tmp == "localhost" ? "127.0.0.1" : tmp);
+	string		tmp = listen.substr(0, sep_pos);
+	ret.ip = tmp == "localhost" ? "127.0.0.1" : tmp;
 	tmp = listen.substr(sep_pos + 1, listen.length() - sep_pos - 1).c_str();
-	ret.port = !isInt(tmp) ? 80 : std::atoi(tmp.c_str());
+	ret.port = std::atoi(tmp.c_str());
 	return ret;
 }
 
@@ -52,8 +58,7 @@ ip_port_t get_ip_port_t(string ip, int port) {
 string read_file(string path) {
 	struct stat info;
 	if (stat(path.c_str(), &info) != 0) {
-		std::cerr << "stat() error on " << path << ": " << strerror(errno)
-				  << "\n";
+		std::cerr << "stat() error on " << path << ": " << strerror(errno) << "\n";
 		return "404";
 	} else if (S_ISDIR(info.st_mode))
 		return "404";
@@ -61,18 +66,14 @@ string read_file(string path) {
 	std::ifstream file(path.c_str());
 	if (!file.good())
 		return "404";
-
-	string str, body;
-	while (file) {
-		std::getline(file, str);
-		body += str + "\n";
-	}
-
+	std::stringstream tmp;
+	tmp << file.rdbuf();
+	string						body = tmp.str();
 	std::stringstream ret;
 	ret << "Content-type: " << getMime(path) << "\r\n"
-		<< "Content-length: " << body.length() << "\r\n"
-		<< "\r\n"
-		<< body;
+			<< "Content-length: " << body.length() << "\r\n"
+			<< "\r\n"
+			<< body;
 	return (ret.str());
 }
 
@@ -128,8 +129,7 @@ string getMime(string path) {
 		return ("font/woff");
 	else if ((extension == "woff2"))
 		return ("font/woff2");
-	else if ((extension == "jar") || (extension == "war") ||
-			 (extension == "ear"))
+	else if ((extension == "jar") || (extension == "war") || (extension == "ear"))
 		return ("application/java-archive");
 	else if ((extension == "json"))
 		return ("application/json");
@@ -145,10 +145,8 @@ string getMime(string path) {
 		return ("application/rtf");
 	else if ((extension == "m3u8"))
 		return ("application/vnd.apple.mpegurl");
-	else if ((extension == "xls") || (extension == "xlt") ||
-			 (extension == "xlm") || (extension == "xld") ||
-			 (extension == "xla") || (extension == "xlc") ||
-			 (extension == "xlw") || (extension == "xll"))
+	else if ((extension == "xls") || (extension == "xlt") || (extension == "xlm") || (extension == "xld") ||
+					 (extension == "xla") || (extension == "xlc") || (extension == "xlw") || (extension == "xll"))
 		return ("application/vnd.ms-excel");
 	else if ((extension == "ppt") || (extension == "pps"))
 		return ("application/vnd.ms-powerpoint");
@@ -170,8 +168,7 @@ string getMime(string path) {
 		return ("application/x-makeself");
 	else if ((extension == "pl") || (extension == "pm"))
 		return ("application/x-perl");
-	else if ((extension == "pdb") || (extension == "pqr") ||
-			 (extension == "prc") || (extension == "pde"))
+	else if ((extension == "pdb") || (extension == "pqr") || (extension == "prc") || (extension == "pde"))
 		return ("application/x-pilot");
 	else if ((extension == "rar"))
 		return ("application/x-rar-compressed");
@@ -185,8 +182,7 @@ string getMime(string path) {
 		return ("application/x-stuffit");
 	else if ((extension == "tcl") || (extension == "tk"))
 		return ("application/x-tcl");
-	else if ((extension == "der") || (extension == "pem") ||
-			 (extension == "crt"))
+	else if ((extension == "der") || (extension == "pem") || (extension == "crt"))
 		return ("application/x-x509-ca-cert");
 	else if ((extension == "xpi"))
 		return ("application/x-xpinstall");
@@ -194,8 +190,7 @@ string getMime(string path) {
 		return ("application/xhtml+xml");
 	else if ((extension == "zip"))
 		return ("application/zip");
-	else if ((extension == "bin") || (extension == "exe") ||
-			 (extension == "dll"))
+	else if ((extension == "bin") || (extension == "exe") || (extension == "dll"))
 		return ("application/octet-stream");
 	else if ((extension == "deb"))
 		return ("application/octet-stream");
@@ -205,11 +200,9 @@ string getMime(string path) {
 		return ("application/octet-stream");
 	else if ((extension == "img") || (extension == "iso"))
 		return ("application/octet-stream");
-	else if ((extension == "msi") || (extension == "msp") ||
-			 (extension == "msm"))
+	else if ((extension == "msi") || (extension == "msp") || (extension == "msm"))
 		return ("application/octet-stream");
-	else if ((extension == "mid") || (extension == "midi") ||
-			 (extension == "kar"))
+	else if ((extension == "mid") || (extension == "midi") || (extension == "kar"))
 		return ("audio/midi");
 	else if ((extension == "mp3"))
 		return ("audio/mpeg");

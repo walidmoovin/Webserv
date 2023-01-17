@@ -3,9 +3,9 @@
 
 class JSONParser {
 	std::fstream file;
-	Tokenizer tokenizer;
+	Tokenizer		 tokenizer;
 
-  public:
+public:
 	JSONParser(const string filename);
 	JSONNode *parse();
 	JSONNode *parseObject();

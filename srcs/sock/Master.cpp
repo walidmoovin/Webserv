@@ -1,10 +1,18 @@
+/**
+ * @file Master.cpp
+ * @brief The master sockets class which receive each incomming new client.
+ * @author Narnaud
+ * @version 0.1
+ * @date 2023-01-12
+ */
 #include "webserv.hpp"
-/* Master destructor */
 
+/* Master destructor */
 Master::~Master(void) {
 	close(_fd);
 	cout << "Destroyed master socket\n";
 }
+
 /* |==========|
  * Master constructor
  * Try to create a socket listening to ip and port defined by input.
@@ -14,89 +22,74 @@ Master::~Master(void) {
  * care about.
  * Output: A Master object.
  */
-
 Master::Master(ip_port_t list) : _listen(list) {
-	int	   x = 1, port = _listen.port;
+	int		 x = 1, port = _listen.port;
 	string ip = _listen.ip;
 
 	_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_fd == 0)
-		throw std::runtime_error("socket() error" + string(strerror(errno)));
-	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&x, sizeof(x)) < 0 &&
-		close(_fd) <= 0)
-		throw std::runtime_error("setsockopt() error: " +
-								 string(strerror(errno)));
-
+	if (_fd == 0) throw std::runtime_error("socket() error" + string(strerror(errno)));
+	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&x, sizeof(x)) < 0 && close(_fd) <= 0)
+		throw std::runtime_error("setsockopt() error: " + string(strerror(errno)));
 	_address.sin_family = AF_INET;
 	_address.sin_addr.s_addr = inet_addr(ip.c_str());
 	_address.sin_port = htons(port);
-
-	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) &&
-		close(_fd) <= 0)
+	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) && close(_fd) <= 0)
 		throw std::runtime_error("bind() error: " + string(strerror(errno)));
-
-	if (listen(_fd, 3) < 0 && close(_fd) <= 0)
-		throw std::runtime_error("listen() error: " + string(strerror(errno)));
-	cout << "New master socket with fd " << _fd << " which listen " << ip << ":"
-		 << port << "\n";
-	if (_fd < _min_fd)
-		_min_fd = _fd;
-	_amount++;
+	if (listen(_fd, 3) < 0 && close(_fd) <= 0) throw std::runtime_error("listen() error: " + string(strerror(errno)));
+#ifdef __APPLE__
+	fcntl(socket, F_SETFL, O_NONBLOCK);
+#endif
+	cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
+	if (_fd < _min_fd) _min_fd = _fd;
 }
+
 /* Set into static Master::readfds the active fds which will be select.*/
-
-void Master::set_fds(void) {
+void Master::pre_select(void) {
 	FD_SET(_fd, &_readfds);
-
-	for (std::vector< Client * >::iterator child = _childs.begin();
-		 child < _childs.end(); child++) {
+	if (_fd > _max_fd) _max_fd = _fd;
+	for (std::vector<Client *>::iterator child = _childs.begin(); child < _childs.end(); child++) {
 		FD_SET((*child)->_fd, &_readfds);
-		if ((*child)->_fd > _max_fd)
-			_max_fd = (*child)->_fd;
+		if ((*child)->_fd > _max_fd) _max_fd = (*child)->_fd;
 	}
 }
+
 /* |==========|
  * Refresh master socket datas after select()
  * - look first for new clients
  * - look then if known clients sent requests or disconnected
  * - if client sent request, handle it to generate answer adapted
  */
-
-void Master::refresh(Env *env) {
+void Master::post_select(Env *env) {
 	int	 valread;
 	int	 addrlen = sizeof(_address);
-	char buffer[1000000];
+	char buffer[128];
 
-	if (FD_ISSET(_fd, &_readfds)) {
-		int new_socket =
-			accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
-		if (new_socket < 0)
-			throw std::runtime_error("accept() error:" +
-									 string(strerror(errno)));
+	if (FD_ISSET(_fd, &_readfds)) { /// < incomming master request
+		int new_socket = accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
+		if (new_socket < 0) throw std::runtime_error("accept() error:" + string(strerror(errno)));
 #ifdef __APPLE__
 		fcntl(new_socket, F_SETFL, O_NONBLOCK);
 #endif
-		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr),
-											 ntohs(_address.sin_port));
+		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr), ntohs(_address.sin_port));
 		_childs.push_back(new Client(new_socket, cli_listen, this));
 	}
 	int child_fd;
-	for (std::vector< Client * >::iterator it = _childs.begin();
-		 it < _childs.end(); it++) {
+	for (std::vector<Client *>::iterator it = _childs.begin(); it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
 		if (FD_ISSET(child_fd, &_readfds)) {
-			valread = read(child_fd, buffer, 1000000);
+			valread = read(child_fd, buffer, 128);
 			buffer[valread] = '\0';
 			if (valread == 0) {
-				getpeername(child_fd, (struct sockaddr *)&_address,
-							(socklen_t *)&addrlen);
+				getpeername(child_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
-			} else if ((*it)->getHeader(env, buffer))
-				(*it)->answer();
+			} else if ((*it)->getRequest(env, buffer)) {
+				(*it)->handleRequest();
+			}
 		}
 	}
 }
+
 /* |==========|
  * Choose the server which must handle a request
  * Each server can listen multiple range_ip:port and each range_ip:port can be
@@ -112,19 +105,15 @@ void Master::refresh(Env *env) {
  * requested in his listen range.
  *
  */
-
 Server *Master::choose_server(Env *env, string host) {
-	std::vector< Server * > exact, inrange;
-	vec_string				ip_listen, ip_required;
+	std::vector<Server *> exact, inrange;
+	vec_string						ip_listen, ip_required;
 
 	ip_required = split(_listen.ip, ".");
-	for (std::vector< Server * >::iterator server = env->_servers.begin();
-		 server < env->_servers.end(); server++) {
-		std::vector< ip_port_t > serv_listens = (*server)->_listens;
-		for (std::vector< ip_port_t >::iterator it = serv_listens.begin();
-			 it < serv_listens.end(); it++) {
-			if (_listen.port != (*it).port)
-				continue;
+	for (std::vector<Server *>::iterator server = env->_servers.begin(); server < env->_servers.end(); server++) {
+		std::vector<ip_port_t> serv_listens = (*server)->_listens;
+		for (std::vector<ip_port_t>::iterator it = serv_listens.begin(); it < serv_listens.end(); it++) {
+			if (_listen.port != (*it).port) continue;
 			if (_listen.ip == (*it).ip) {
 				exact.push_back(*server);
 				continue;
@@ -132,27 +121,23 @@ Server *Master::choose_server(Env *env, string host) {
 			bool is_inrange = true;
 			ip_listen = split((*it).ip, ".");
 			vec_string::iterator r = ip_required.begin();
-			for (vec_string::iterator l = ip_listen.end();
-				 l >= ip_listen.begin(); --l) {
-				if (*l != *r && *l != "0")
-					is_inrange = false;
+			for (vec_string::iterator l = ip_listen.end(); l >= ip_listen.begin(); --l) {
+				if (*l != *r && *l != "0") is_inrange = false;
 			}
-			if (is_inrange)
-				inrange.push_back(*server);
+			if (is_inrange) inrange.push_back(*server);
 		}
 	}
+	if (DEBUG) std::cout << "req: " << _listen.ip << ":" << _listen.port << "\n";
 	if (exact.size() == 0) {
-		for (std::vector< Server * >::iterator server = inrange.begin();
-			 server < inrange.end(); server++) {
-			if (host == (*server)->getName())
-				return *server;
+		std::cout << "in range server check\n";
+		for (std::vector<Server *>::iterator server = inrange.begin(); server < inrange.end(); server++) {
+			if (host == (*server)->getName()) return *server;
 		}
 		return inrange.front();
 	} else {
-		for (std::vector< Server * >::iterator server = exact.begin();
-			 server < exact.end(); server++) {
-			if (host == (*server)->getName())
-				return *server;
+		std::cout << "exact server check\n";
+		for (std::vector<Server *>::iterator server = exact.begin(); server < exact.end(); server++) {
+			if (host == (*server)->getName()) return *server;
 		}
 		return exact.front();
 	}

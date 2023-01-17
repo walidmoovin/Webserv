@@ -1,8 +1,6 @@
 #include "webserv.hpp"
 
-void print_block(string name, string content) {
-	if (!DEBUG)
-		return ;
+void debug_block(string name, string content) {
 	string separator = "|==================================================="
 					   "===========================|\n";
 	cout << name << separator.substr(name.length(), string::npos) << content
@@ -10,7 +8,7 @@ void print_block(string name, string content) {
 		 << separator;
 }
 
-void Client::print_header(void) {
+void Client::debug_header(void) {
 	cout << "Method: " << _method << "\n";
 	cout << "Uri: " << _uri << "\n";
 	cout << "Query: " << _query << "\n";

@@ -1,0 +1,5 @@
+<map id="Env::pre_select" name="Env::pre_select">
+<area shape="rect" id="node1" title="Append each master_sockets and their clients to list of fds SELECT must look at." alt="" coords="243,5,363,31"/>
+<area shape="rect" id="node2" href="$classEnv.html#a0c8b92f45308987231f9b0be8751d39f" title="A Wevserv cycle:" alt="" coords="108,5,195,31"/>
+<area shape="rect" id="node3" href="$webserv_8cpp.html#a0c99d968a34e803d378692bde2e3f18f" title="&lt; The amount of sockets listens" alt="" coords="5,5,60,31"/>
+</map>

@@ -4,7 +4,7 @@ Tokenizer::Tokenizer(string fileName) {
 	file.open(fileName.c_str(), std::ios::in);
 	if (!file.good())
 		cout << "File open error"
-			 << "\n";
+				 << "\n";
 }
 bool Tokenizer::hasMoreTokens() { return !file.eof(); }
 
@@ -12,9 +12,8 @@ char Tokenizer::getWithoutWhiteSpace() {
 	char c = ' ';
 	while ((c == ' ' || c == '\n') || c == '\t') {
 		file.get(c); // check
-
 		if ((c == ' ' || c == '\n') && !file.good()) {
-			// cout << file.eof() << " " << file.fail() << "\n";
+			// cout << file.eof() << " " << file.fail() << "\n"; 
 			throw std::logic_error("Ran out of tokens");
 		} else if (!file.good()) {
 			return c;
@@ -24,15 +23,14 @@ char Tokenizer::getWithoutWhiteSpace() {
 	return c;
 }
 void Tokenizer::rollBackToken() {
-	if (file.eof())
-		file.clear();
+	if (file.eof()) file.clear();
 	file.seekg(prevPos);
 }
 Token Tokenizer::getToken() {
 	char c;
 	if (file.eof()) {
 		cout << "Exhaused tokens"
-			 << "\n";
+				 << "\n";
 		// throw std::exception("Exhausted tokens");
 	}
 	prevPos = file.tellg();
