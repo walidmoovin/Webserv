@@ -40,7 +40,7 @@ int main(int ac, char **av) {
 		Env env(conf);
 		while (1) env.cycle();
 	} catch (const std::exception &e) {
-		std::cerr << e.what() << '\n';
+		std::cerr << e.what();
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;

@@ -21,7 +21,7 @@
 			"indexs": ["basique.html"],
 			"cgi": {
 				".php": "/usr/bin/php",
-				".py": "/usr/bin/python
+				".py": "/usr/bin/python"
 			},
 			"client_max_body_size": 10000,
 			"locations": {

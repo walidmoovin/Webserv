@@ -15,15 +15,18 @@ JSONNode *JSONParser::parse() {
 JSONNode *JSONParser::parseObject() {
 	JSONNode	 *node = new JSONNode;
 	JSONObject *keyObjectMap = new JSONObject;
+	node->setObj(keyObjectMap);
 	try {
 		while (1) {
 			if (!tokenizer.hasMoreTokens()) {
 				delete node;
 				throw std::logic_error("No more tokens");
 			}
-			Token	 token = tokenizer.getToken();
+			Token token = tokenizer.getToken();
+			if (token.type != STRING) throw std::logic_error("Invalid json syntax: object key isn't a string");
 			string key = token.value;
-			tokenizer.getToken();
+			token = tokenizer.getToken();
+			if (token.type != COLON) throw std::logic_error("Invalid json syntax: missing colon");
 			token = tokenizer.getToken();
 			switch (token.type) {
 			case CURLY_OPEN: {
@@ -61,22 +64,22 @@ JSONNode *JSONParser::parseObject() {
 				break;
 			}
 			default:
+				throw std::logic_error("Invalid json syntax: Invalid object member type");
 				break;
 			}
 			token = tokenizer.getToken();
 			if (token.type == CURLY_CLOSE) break;
 		}
-		node->setObj(keyObjectMap);
 		return node;
 	} catch (std::exception &e) {
 		delete node;
-		std::cout << e.what();
-		throw std::runtime_error(".");
+		throw std::logic_error(e.what());
 	}
 }
 JSONNode *JSONParser::parseList() {
 	JSONNode *node = new JSONNode();
 	JSONList *list = new JSONList();
+	node->setLst(list);
 
 	try {
 		bool hasCompleted = false;
@@ -122,18 +125,17 @@ JSONNode *JSONParser::parseList() {
 				break;
 			}
 			default:
+				throw std::logic_error("Invalid json syntax: Invalid list member type");
 				break;
 			}
 			list->push_back(subNode);
 			token = tokenizer.getToken();
 			if (token.type == ARRAY_CLOSE) { hasCompleted = true; }
 		}
-		node->setLst(list);
 		return node;
 	} catch (std::exception &e) {
 		delete node;
-		std::cout << e.what();
-		throw std::runtime_error(".");
+		throw std::logic_error(e.what());
 	}
 }
 JSONNode *JSONParser::parseString() {
@@ -143,10 +145,9 @@ JSONNode *JSONParser::parseString() {
 		string *sValue = new string(token.value);
 		node->setStr(sValue);
 		return node;
-
 	} catch (std::exception &e) {
 		delete node;
-		throw std::runtime_error(".");
+		throw std::logic_error(e.what());
 	}
 }
 JSONNode *JSONParser::parseNumber() {
@@ -159,7 +160,7 @@ JSONNode *JSONParser::parseNumber() {
 		return node;
 	} catch (std::exception &e) {
 		delete node;
-		throw std::runtime_error(".");
+		throw std::logic_error(e.what());
 	}
 }
 JSONNode *JSONParser::parseBoolean() {
@@ -171,7 +172,7 @@ JSONNode *JSONParser::parseBoolean() {
 		return node;
 	} catch (std::exception &e) {
 		delete node;
-		throw std::runtime_error(".");
+		throw std::logic_error(e.what());
 	}
 }
 JSONNode *JSONParser::parseNull() {
@@ -181,6 +182,6 @@ JSONNode *JSONParser::parseNull() {
 		return node;
 	} catch (std::exception &e) {
 		delete node;
-		throw std::runtime_error(".");
+		throw std::logic_error(e.what());
 	}
 }

@@ -43,6 +43,7 @@ Token Tokenizer::getToken() {
 		token.value = "";
 		file.get(c);
 		while (c != '"') {
+      if (c == '}' || c == ']' || c == ',') throw std::logic_error("Invalid json syntax: a string is not close");
 			token.value += c;
 			file.get(c);
 		}
