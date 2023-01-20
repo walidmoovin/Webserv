@@ -1,5 +1,18 @@
+/**
+ * @file Nodes.cpp
+ * @brief A node object is a container for each json values or blocks. It can contain either a std::map<String,
+ * std::Node*> a std::vector<Node*> a String* a number or a bool.
+ *
+ * @author Narnaud
+ * @version 0.1
+ * @date 2023-01-17
+ */
 #include "webserv.hpp"
 
+/**
+ * @brief Destructor
+ * Destroy Node and all sub Nodes he contain.
+ */
 JSONNode::~JSONNode(void) {
 	switch (type) {
 	case OBJECT:

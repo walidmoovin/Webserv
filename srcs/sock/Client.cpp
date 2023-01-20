@@ -34,8 +34,7 @@ void Client::init(void) {
 
 bool Client::getRequest(Env *env, string paquet) {
 	if (paquet.length() < 1) send_error(403);
-	// if (DEBUG)
-	debug_block("Paquet: ", paquet);
+	if (DEBUG) debug_block("Paquet: ", paquet);
 	if (header_pick("Method:", 0) != "") return getBody(paquet);
 	vec_string lines = split(paquet, "\r\n");
 	for (vec_string::iterator it = lines.begin(); it < lines.end(); it++) {
@@ -152,6 +151,12 @@ void Client::create_file(string path) {
 	}
 }
 
+/**
+* @brief Launch cgi binary to parse the file requested by the client.
+*
+* @param cgi_path The cgi binary location specified in configuration file according to the file requested.
+* @param path The path to the file requested.
+*/
 void Client::cgi(string cgi_path, string path) {
 	int								status;
 	int								fd[2];
@@ -185,15 +190,15 @@ void Client::cgi(string cgi_path, string path) {
 	send_answer(ss.str());
 }
 
-void Client::send_redir(int redir_code, string opt) {
-	switch (redir_code) {
-	case 301:
-		return send_answer("HTTTP/1.1 301 Moved Permanently\r\nLocation: " + opt + "\r\n\r\n");
-	}
-}
-
-void Client::send_error(int error_code) {
+/**
+ * @brief Send an error answer to the client.
+ *
+ * @param error_code The HTTP response code to send.
+ */
+void Client::send_error(int error_code, string opt = "") {
 	switch (error_code) {
+	case 301:
+		return send_answer("HTTP/1.1 301 Moved Permanently\r\nLocation: " + opt + "\r\n\r\n");
 	case 400:
 		return send_answer("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n");
 	case 403:
@@ -209,6 +214,11 @@ void Client::send_error(int error_code) {
 	}
 }
 
+/**
+ * @brief Send an answer to the client.
+ *
+ * @param msg The HTTP message to send.
+ */
 void Client::send_answer(string msg) {
 	if (DEBUG) debug_block("ANSWER: ", msg);
 #ifdef __linux__

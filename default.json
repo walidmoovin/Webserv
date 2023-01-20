@@ -14,6 +14,11 @@
       "root": "html/",
       "indexs": ["index.html"]
     },
+    {
+      "server_name": "localhost",
+      "root": "html/",
+      "indexs": ["index.html"]
+    },
 		{
 			"server_name": "narnaud.42.fr",
 			"listens": ["192.168.62.61:8080", "localhost", "555"],

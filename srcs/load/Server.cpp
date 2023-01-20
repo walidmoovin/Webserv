@@ -45,25 +45,6 @@ Server::~Server(void) {
 string Server::getName(void) { return _name; }
 
 /**
- * @brief Master socket safe creation.
- *
- * @param str a "ip:port" string
- *
- * @return a Master socket object or NULL if the creation failed.
- */
-Master *Server::create_master(string str) {
-	ip_port_t listen = get_ip_port_t(str);
-	if (listen.ip.at(0) != '[') {
-		try {
-			_listens.push_back(listen);
-			Master *sock = new Master(listen);
-			return (sock);
-		} catch (std::exception &e) { std::cerr << e.what() << '\n'; }
-	} else cout << "Listen: IPv6 isn't supported\n";
-	return NULL;
-}
-
-/**
  * @brief Create server's defined sockets:
  *
  * @param server A server block node from JSONParser.
@@ -71,18 +52,23 @@ Master *Server::create_master(string str) {
  * @retrn A vector containing all the succesfull created sockets using
  * listens from the server block.
  */
-std::vector<Master *> Server::get_sockets(JSONNode *server) {
+std::vector<Master *> Server::create_masters(JSONNode *server) {
 	JSONObject						datas = server->obj();
 	std::vector<Master *> ret;
-	Master							 *tmp;
-	ip_port_t							listen;
+
 	if (datas["listens"]) {
 		JSONList listens = datas["listens"]->lst();
-		for (JSONList::iterator it = listens.begin(); it != listens.end(); it++) {
-			if ((tmp = create_master((*it)->str()))) ret.push_back(tmp);
-		}
-	} else if ((tmp = create_master("0.0.0.0"))) ret.push_back(tmp);
+		for (JSONList::iterator it = listens.begin(); it != listens.end(); it++)
+			_listens.push_back(get_ip_port_t((*it)->str()));
+	} else _listens.push_back(get_ip_port_t("0.0.0.0"));
+	for (std::vector<ip_port_t>::iterator listen = _listens.begin(); listen < _listens.end(); listen++) {
+		if (listen->ip.at(0) != '[') try {
+				ret.push_back(new Master(*listen));
+			} catch (std::exception &e) { std::cerr << e.what() << '\n'; }
+		else cout << "Listen: IPv6 isn't supported\n";
+	}
 	return ret;
+	//	else if ((tmp = create_master("0.0.0.0"))) ret.push_back(tmp); return ret;
 }
 
 /**

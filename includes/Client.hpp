@@ -20,8 +20,7 @@ class Client {
 	bool	 check_method(void);
 	void	 create_file(string path);
 	void	 cgi(string cgi_path, string path);
-	void	 send_redir(int redir_code, string opt);
-	void	 send_error(int error_code);
+	void	 send_error(int error_code, string opt = "");
 	void	 send_answer(string msg);
 
 #ifdef DEBUG

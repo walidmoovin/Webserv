@@ -1,19 +1,30 @@
+/**
+ * @file Token.cpp
+ * @brief The tokenizer read json file and when asked for give us the next token encounter and his type.
+ * @author Narnaud
+ * @version 0.1
+ * @date 2023-01-17
+ */
 #include "webserv.hpp"
 
+/**
+ * @brief Constructor
+ * Open conf file if he is readeable.
+ *
+ * @param fileName conf file path.
+ */
 Tokenizer::Tokenizer(string fileName) {
 	file.open(fileName.c_str(), std::ios::in);
-	if (!file.good())
-		cout << "File open error"
-				 << "\n";
+	if (!file.good()) std::cerr << "File open error.\n";
 }
+
 bool Tokenizer::hasMoreTokens() { return !file.eof(); }
 
 char Tokenizer::getWithoutWhiteSpace() {
 	char c = ' ';
 	while ((c == ' ' || c == '\n') || c == '\t') {
-		file.get(c); // check
+		file.get(c);
 		if ((c == ' ' || c == '\n') && !file.good()) {
-			// cout << file.eof() << " " << file.fail() << "\n"; 
 			throw std::logic_error("Ran out of tokens");
 		} else if (!file.good()) {
 			return c;
@@ -22,20 +33,17 @@ char Tokenizer::getWithoutWhiteSpace() {
 
 	return c;
 }
+
 void Tokenizer::rollBackToken() {
 	if (file.eof()) file.clear();
 	file.seekg(prevPos);
 }
+
 Token Tokenizer::getToken() {
 	char c;
-	if (file.eof()) {
-		cout << "Exhaused tokens"
-				 << "\n";
-		// throw std::exception("Exhausted tokens");
-	}
+	if (file.eof()) { cout << "Exhaused tokens\n"; }
 	prevPos = file.tellg();
 	c = getWithoutWhiteSpace();
-
 	Token token;
 	token.type = NULL_TYPE;
 	if (c == '"') {
@@ -43,16 +51,11 @@ Token Tokenizer::getToken() {
 		token.value = "";
 		file.get(c);
 		while (c != '"') {
-      if (c == '}' || c == ']' || c == ',') throw std::logic_error("Invalid json syntax: a string is not close");
+			if (c == '}' || c == ']' || c == ',') throw std::logic_error("Invalid json syntax: a string is not close");
 			token.value += c;
 			file.get(c);
 		}
-	} else if (c == '{') {
-		token.type = CURLY_OPEN;
-	} else if (c == '}') {
-		token.type = CURLY_CLOSE;
 	} else if (c == '-' || (c >= '0' && c <= '9')) {
-		// Check if string is numeric
 		token.type = NUMBER;
 		token.value = "";
 		token.value += c;
@@ -60,15 +63,11 @@ Token Tokenizer::getToken() {
 		while ((c == '-') || (c >= '0' && c <= '9') || c == '.') {
 			prevCharPos = file.tellg();
 			file.get(c);
-
 			if (file.eof()) {
 				break;
 			} else {
-				if ((c == '-') || (c >= '0' && c <= '9') || (c == '.')) {
-					token.value += c;
-				} else {
-					file.seekg(prevCharPos);
-				}
+				if ((c == '-') || (c >= '0' && c <= '9') || (c == '.')) token.value += c;
+				else file.seekg(prevCharPos);
 			}
 		}
 	} else if (c == 'f') {
@@ -82,15 +81,11 @@ Token Tokenizer::getToken() {
 	} else if (c == 'n') {
 		token.type = NULL_TYPE;
 		file.seekg(3, std::ios_base::cur);
-	} else if (c == '[') {
-		token.type = ARRAY_OPEN;
-	} else if (c == ']') {
-		token.type = ARRAY_CLOSE;
-	} else if (c == ':') {
-		token.type = COLON;
-	} else if (c == ',') {
-		token.type = COMMA;
-	}
-	// cout << token.type << " : " << token.value << "\n";
+	} else if (c == '{') token.type = CURLY_OPEN;
+	else if (c == '}') token.type = CURLY_CLOSE;
+	else if (c == '[') token.type = ARRAY_OPEN;
+	else if (c == ']') token.type = ARRAY_CLOSE;
+	else if (c == ':') token.type = COLON;
+	else if (c == ',') token.type = COMMA;
 	return token;
 }

@@ -7,20 +7,21 @@
  */
 #include "webserv.hpp"
 
-/* Master destructor */
+/**
+ * @brief Destructor
+ * Close master socket descriptor.
+ */
 Master::~Master(void) {
 	close(_fd);
 	cout << "Destroyed master socket\n";
 }
 
-/* |==========|
- * Master constructor
+/**
+ * @brief Constructor
  * Try to create a socket listening to ip and port defined by input.
- * If the creation success, the socket is then ready to select for new clients.
+ * If no exception if thrown, the creation success and the socket is then ready to select for new clients.
  *
- * Input: A ip_port_t structure which contain the ip and the port the master
- * care about.
- * Output: A Master object.
+ * @param list An ip_port_t struct which contain the ip and the port the master listen.
  */
 Master::Master(ip_port_t list) : _listen(list) {
 	int		 x = 1, port = _listen.port;
@@ -43,7 +44,10 @@ Master::Master(ip_port_t list) : _listen(list) {
 	if (_fd < _min_fd) _min_fd = _fd;
 }
 
-/* Set into static Master::readfds the active fds which will be select.*/
+/**
+ * @brief The pre select operations:
+ * Add master's socket descriptor and each one of his childs to the select list of descriptor.
+ */
 void Master::pre_select(void) {
 	FD_SET(_fd, &_readfds);
 	if (_fd > _max_fd) _max_fd = _fd;
@@ -58,6 +62,15 @@ void Master::pre_select(void) {
  * - look first for new clients
  * - look then if known clients sent requests or disconnected
  * - if client sent request, handle it to generate answer adapted
+ */
+/**
+ * @brief Checkk master and his clients sockets after select performed.
+ * - First look for new clients
+ * - Then handle clients awaiting action:
+ *   - Disconnect them if nothing's new on the socket (request altready handled)
+ *   - Read and parse request else until it's ready to answer and does it.
+ *
+ * @param env The environment object which contain the liste of servers to know which one the client is trying to reach.
  */
 void Master::post_select(Env *env) {
 	int	 valread;
@@ -77,7 +90,7 @@ void Master::post_select(Env *env) {
 	for (std::vector<Client *>::iterator it = _childs.begin(); it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
 		if (FD_ISSET(child_fd, &_readfds)) {
-			valread = read(child_fd, buffer, 128);
+			valread = read(child_fd, buffer, 127);
 			buffer[valread] = '\0';
 			if (valread == 0) {
 				getpeername(child_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
@@ -90,20 +103,20 @@ void Master::post_select(Env *env) {
 	}
 }
 
-/* |==========|
- * Choose the server which must handle a request
- * Each server can listen multiple range_ip:port and each range_ip:port can be
- * listen by multiple servers. So for each request, we must look at the socket
- * which given us the client to know how the client came. If multiple servers
- * listen the range from where the client came, ones with exact correspondance
- * are prefered.
+/**
  *
- * If there are multiples servers listening exactly the ip the client try to
- * reach or whic listen a range which contain it, the first one which have the
- * same server_name as the host the client used to reach server is used, else
- * it's the first one of exact correspondance or first one which have the ip
- * requested in his listen range.
+ * @brief Choose the server which must handle a request
+ * Each server can lsiten multiple range_ip:port and each range_it:port can be listen by multiple servers.
+ * So for each request, we must look at the socket which given us the client to know how the client came. If multiple
+ * servers listen the range from where the client came, ones with exact correspondance are prefered. If there are
+ * multiples servers listening exactly the ip the client try to reach or which listen a range which contain it, the
+ * first one which have the same server_name as the host the client used to reach server is used, else it's the first
+ * one of exact correspondance or first one which have the ip requested in his listen range.
  *
+ * @param env The environment object.
+ * @param host The host the client used to reached the server.
+ *
+ * @return The server object choosen to handle the request.
  */
 Server *Master::choose_server(Env *env, string host) {
 	std::vector<Server *> exact, inrange;
@@ -129,13 +142,11 @@ Server *Master::choose_server(Env *env, string host) {
 	}
 	if (DEBUG) std::cout << "req: " << _listen.ip << ":" << _listen.port << "\n";
 	if (exact.size() == 0) {
-		std::cout << "in range server check\n";
 		for (std::vector<Server *>::iterator server = inrange.begin(); server < inrange.end(); server++) {
 			if (host == (*server)->getName()) return *server;
 		}
 		return inrange.front();
 	} else {
-		std::cout << "exact server check\n";
 		for (std::vector<Server *>::iterator server = exact.begin(); server < exact.end(); server++) {
 			if (host == (*server)->getName()) return *server;
 		}

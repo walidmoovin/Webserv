@@ -1,5 +1,12 @@
 #include "webserv.hpp"
 
+/**
+ * @file Parser.cpp
+ * @brief The parser lead the Tokenizer to travel along configuration file and create nodes with tokens.
+ * @author Narnaud
+ * @version 0.1
+ * @date 2023-01-17
+ */
 JSONParser::JSONParser(const string filename) : tokenizer(filename) {}
 
 JSONNode *JSONParser::parse() {
@@ -8,7 +15,7 @@ JSONNode *JSONParser::parse() {
 	Token			token;
 	token = tokenizer.getToken();
 	if (token.type == CURLY_OPEN) parsed = parseObject();
-	if (!parsed) std::cout << "Configuration file isn't valid\n";
+	else throw std::logic_error("Invalid json syntax: json file must be an unique object block");
 	return parsed;
 }
 
@@ -23,7 +30,7 @@ JSONNode *JSONParser::parseObject() {
 				throw std::logic_error("No more tokens");
 			}
 			Token token = tokenizer.getToken();
-			if (token.type != STRING) throw std::logic_error("Invalid json syntax: object key isn't a string");
+			if (token.type != STRING) throw std::logic_error("Invalid json syntax: Unclosed string");
 			string key = token.value;
 			token = tokenizer.getToken();
 			if (token.type != COLON) throw std::logic_error("Invalid json syntax: missing colon");

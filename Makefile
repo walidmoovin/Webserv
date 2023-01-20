@@ -5,13 +5,16 @@ SRCS= srcs/webserv.cpp srcs/tools.cpp srcs/debug.cpp \
 	  srcs/json/Nodes.cpp srcs/json/Token.cpp srcs/json/Parser.cpp
 OBJS= $(SRCS:.cpp=.o)
 CXX=c++
-CXXFLAGS= -g -I includes -Werror -Wextra -Wall -std=c++98
+CXXFLAGS= -I includes -Werror -Wextra -Wall -std=c++98
 
 
 all : $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) -g -fsanitize=address $(OBJS) -o $(NAME)
+	$(CXX) $(OBJS) -o $(NAME)
+
+debug:
+	$(CXX) -I includes -Werror -Wextra -Wall -std=c++98 -g -fsanitize=address $(SRCS) -o $(NAME) -D DEBUG=1
 
 clean:
 	rm -rf $(OBJS)

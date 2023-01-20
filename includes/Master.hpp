@@ -8,7 +8,6 @@ class Master {
 
 public:
 	Master(ip_port_t listen);
-	Master(int fd, Master *parent);
 	~Master(void);
 
 	void		pre_select(void);
