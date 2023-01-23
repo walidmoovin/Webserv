@@ -27,6 +27,7 @@ Env::Env(JSONNode *conf) {
 				this->_masters.insert(this->_masters.end(), tmp_s.begin(), tmp_s.end());
 			}
 		}
+		Master::_first_cli_id = Master::_poll_id_amount - 1;
 		if ((node = conf->obj()["allowed_methods"])) {
 			JSONList lst = node->lst();
 			for (JSONList::iterator it = lst.begin(); it < lst.end(); it++) {
@@ -54,29 +55,19 @@ Env::~Env() {
  * - refresh and handle requests
  */
 void Env::cycle(void) {
-	FD_ZERO(&Master::_readfds);
-	Master::_max_fd = Master::_min_fd;
-	pre_select();
 	cout << "|===||===| Waiting some HTTP request... |===||===|\n";
-	int activity = select(Master::_max_fd + 1, &(Master::_readfds), NULL, NULL, NULL);
-	if ((activity < 0) && (errno != EINTR)) std::cerr << "Select: " << strerror(errno) << "\n";
-	post_select();
-}
-
-/// @brief Append each master_sockets and their clients to list of fds SELECT must look at.
-void Env::pre_select(void) {
-	cout << "==> Check sockets still alive to listen\n";
-	for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++)
-		(*it)->pre_select();
+	int pollResult = poll(Master::_pollfds, Master::_poll_id_amount + 1, 5000);
+	if ((pollResult < 0) && (errno != EINTR)) std::cerr << "Select: " << strerror(errno) << "\n";
+	if (pollResult > 0) post_poll();
 }
 
 /**
  * @brief Refresh all master_sockets and their clients datas (disconnect, new
  * connection, etc..) and parse requests recieved.
  */
-void Env::post_select(void) {
+void Env::post_poll() {
 	cout << "==> Handle requests and answers:\n";
 	for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++) try {
-			(*it)->post_select(this);
+			(*it)->post_poll(this);
 		} catch (std::exception &e) { std::cerr << e.what(); }
 }

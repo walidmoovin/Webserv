@@ -41,28 +41,12 @@ Master::Master(ip_port_t list) : _listen(list) {
 	fcntl(socket, F_SETFL, O_NONBLOCK);
 #endif
 	cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
-	if (_fd < _min_fd) _min_fd = _fd;
+	_pollfds[_poll_id_amount].fd = _fd;
+	_pollfds[_poll_id_amount].events = POLLIN | POLLPRI;
+	_poll_id = _poll_id_amount;
+	_poll_id_amount++;
 }
 
-/**
- * @brief The pre select operations:
- * Add master's socket descriptor and each one of his childs to the select list of descriptor.
- */
-void Master::pre_select(void) {
-	FD_SET(_fd, &_readfds);
-	if (_fd > _max_fd) _max_fd = _fd;
-	for (std::vector<Client *>::iterator child = _childs.begin(); child < _childs.end(); child++) {
-		FD_SET((*child)->_fd, &_readfds);
-		if ((*child)->_fd > _max_fd) _max_fd = (*child)->_fd;
-	}
-}
-
-/* |==========|
- * Refresh master socket datas after select()
- * - look first for new clients
- * - look then if known clients sent requests or disconnected
- * - if client sent request, handle it to generate answer adapted
- */
 /**
  * @brief Checkk master and his clients sockets after select performed.
  * - First look for new clients
@@ -72,32 +56,54 @@ void Master::pre_select(void) {
  *
  * @param env The environment object which contain the liste of servers to know which one the client is trying to reach.
  */
-void Master::post_select(Env *env) {
-	int	 valread;
-	int	 addrlen = sizeof(_address);
-	char buffer[128];
+void Master::post_poll(Env *env) {
+	int addrlen = sizeof(_address);
 
-	if (FD_ISSET(_fd, &_readfds)) { /// < incomming master request
+	if (_pollfds[_poll_id].revents & POLLIN) { /// < incomming master request
 		int new_socket = accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
 		if (new_socket < 0) throw std::runtime_error("accept() error:" + string(strerror(errno)));
 #ifdef __APPLE__
 		fcntl(new_socket, F_SETFL, O_NONBLOCK);
 #endif
 		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr), ntohs(_address.sin_port));
-		_childs.push_back(new Client(new_socket, cli_listen, this));
+		Client	 *new_cli = new Client(new_socket, cli_listen, this);
+		_childs.push_back(new_cli);
+		for (int i = _first_cli_id; i < MAX_CLIENTS; i++) {
+			if (_pollfds[i].fd != 0) continue;
+			_pollfds[i].fd = new_socket;
+			_pollfds[i].events = POLLIN | POLLPRI;
+			new_cli->_poll_id = i;
+			_poll_id_amount++;
+      break;
+		}
 	}
 	int child_fd;
 	for (std::vector<Client *>::iterator it = _childs.begin(); it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
-		if (FD_ISSET(child_fd, &_readfds)) {
-			valread = read(child_fd, buffer, 127);
+		int i = (*it)->_poll_id;
+		if (_pollfds[i].fd > 0 && _pollfds[i].revents & POLLIN) {
+
+			char buffer[128];
+			int	 valread = read(child_fd, buffer, 127);
 			buffer[valread] = '\0';
 			if (valread == 0) {
-				getpeername(child_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
+				// getpeername(child_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
+				_pollfds[i].fd = 0;
+				_pollfds[i].events = 0;
+				_pollfds[i].revents = 0;
+				_poll_id_amount--;
 			} else if ((*it)->getRequest(env, buffer)) {
 				(*it)->handleRequest();
+				if ((*it)->_finish) {
+					delete (*it);
+					_childs.erase(it);
+					_pollfds[i].fd = 0;
+					_pollfds[i].events = 0;
+					_pollfds[i].revents = 0;
+					_poll_id_amount--;
+				}
 			}
 		}
 	}
@@ -133,9 +139,10 @@ Server *Master::choose_server(Env *env, string host) {
 			}
 			bool is_inrange = true;
 			ip_listen = split((*it).ip, ".");
-			vec_string::iterator r = ip_required.begin();
-			for (vec_string::iterator l = ip_listen.end(); l >= ip_listen.begin(); --l) {
-				if (*l != *r && *l != "0") is_inrange = false;
+			vec_string::iterator r = ip_required.end();
+			vec_string::iterator l = ip_listen.end();
+			while (r > ip_required.begin()) {
+				if (*(--l) != *(--r) && *l != "0") is_inrange = false;
 			}
 			if (is_inrange) inrange.push_back(*server);
 		}

@@ -20,16 +20,18 @@ Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip
 
 Client::~Client(void) {
 	close(_fd);
+	_headers.clear();
 	cout << "Host disconnected, ip " << _ip_port.ip << ", port " << _ip_port.port << "\n";
 }
 
 void Client::init(void) {
+	_finish = false;
 	_server = NULL;
 	_route = NULL;
 	_method = _uri = _host = _header = _body = "";
 	_len = 0;
 	_last_chunk = false;
-	_request.clear();
+	_headers.clear();
 }
 
 bool Client::getRequest(Env *env, string paquet) {
@@ -74,11 +76,11 @@ bool Client::parseHeader(Env *env) {
 	if (DEBUG) cout << "Parsing header...\n";
 	lines = split(_header, "\r\n");
 	method = split(lines.at(0), " ");
-	_request["Method:"] = method;
+	_headers["Method:"] = method;
 	if (lines.size() > 0) {
 		for (vec_string::iterator it = lines.begin() + 1; it < lines.end(); it++) {
 			line = split(*it, " ");
-			_request[line.at(0)] = vec_string(line.begin() + 1, line.end());
+			_headers[line.at(0)] = vec_string(line.begin() + 1, line.end());
 		}
 	}
 	_method = header_pick("Method:", 0);
@@ -105,7 +107,7 @@ bool Client::parseHeader(Env *env) {
 	return true;
 }
 
-string Client::header_pick(string key, size_t id) { return _request[key].size() <= id ? "" : _request[key].at(id); }
+string Client::header_pick(string key, size_t id) { return _headers[key].size() <= id ? "" : _headers[key].at(id); }
 
 bool Client::check_method(void) {
 	vec_string allowed;
@@ -147,47 +149,46 @@ void Client::create_file(string path) {
 	else {
 		file << _body;
 		file.close();
-		send_answer("HTTP/1.1 201 Accepted\r\nContent-Length: 0\r\n\r\n");
+		send_answer("HTTP/1.1 201 Accepted\r\n\r\n");
 	}
 }
 
 /**
-* @brief Launch cgi binary to parse the file requested by the client.
-*
-* @param cgi_path The cgi binary location specified in configuration file according to the file requested.
-* @param path The path to the file requested.
-*/
+ * @brief Launch cgi binary to parse the file requested by the client.
+ *
+ * @param cgi_path The cgi binary location specified in configuration file according to the file requested.
+ * @param path The path to the file requested.
+ */
 void Client::cgi(string cgi_path, string path) {
-	int								status;
-	int								fd[2];
-	std::stringstream ss;
-	string						ret;
+	int pipe_in[2];
 
+	send(_fd, "HTTP/1.1 200 OK\r\n", 17, MSG_NOSIGNAL);
 	if (!std::ifstream(cgi_path.c_str()).good()) return send_error(404);
-	pipe(fd);
+    if (DEBUG) std::cout << "Send cgi\n";
 	if (fork() == 0) {
-		const char **args = new const char *[cgi_path.length() + path.length() + 2];
+		const char **args = new const char *[cgi_path.length() + 1];
 		args[0] = cgi_path.c_str();
-		args[1] = path.c_str();
-		args[2] = NULL;
+		args[1] = NULL;
 		string			 path_info = "PATH_INFO=" + _route->getRoot();
 		string			 query = "QUERY_STRING=" + _query;
 		const char **env = new const char *[path_info.length() + query.length() + 2];
 		env[0] = path_info.c_str();
 		env[1] = query.c_str();
 		env[2] = NULL;
-		dup2(fd[1], STDOUT_FILENO);
-		close(fd[1]);
-		close(fd[0]);
+		pipe(pipe_in);
+		std::stringstream tmp;
+		tmp << std::ifstream(path.c_str()).rdbuf();
+		string file = tmp.str();
+		write(pipe_in[1], file.c_str(), file.size());
+		close(pipe_in[1]);
+		dup2(pipe_in[0], STDIN_FILENO);
+		close(pipe_in[0]);
+		dup2(_fd, STDOUT_FILENO);
+		close(_fd);
 		execve(cgi_path.c_str(), (char **)args, (char **)env);
+		exit(1);
 	}
-	close(fd[1]);
-	waitpid(-1, &status, 0);
-	char buffer[10000];
-	buffer[read(fd[0], buffer, 10000)] = 0;
-	ret = string(buffer);
-	ss << "HTTP/1.1 200 OK\r\nContent-Length: " << ret.length() - ret.find("\r\n\r\n") - 4 << "\r\n\r\n" << ret;
-	send_answer(ss.str());
+	_finish = true;
 }
 
 /**
@@ -195,22 +196,22 @@ void Client::cgi(string cgi_path, string path) {
  *
  * @param error_code The HTTP response code to send.
  */
-void Client::send_error(int error_code, string opt = "") {
+void Client::send_error(int error_code, string opt) {
 	switch (error_code) {
 	case 301:
 		return send_answer("HTTP/1.1 301 Moved Permanently\r\nLocation: " + opt + "\r\n\r\n");
 	case 400:
-		return send_answer("HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n");
+		return send_answer("HTTP/1.1 400 Bad Request\r\n\r\n");
 	case 403:
-		return send_answer("HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n");
+		return send_answer("HTTP/1.1 403 Forbidden\r\n\r\n");
 	case 404:
-		return send_answer("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
+		return send_answer("HTTP/1.1 404 Not Found\r\n\r\n");
 	case 405:
 		return send_answer("HTTP/1.1 405 Method Not Allowed\r\nConnection: "
-											 "close\r\nContent-Length: 0\r\n\r\n");
+											 "close\r\n\r\n");
 	case 413:
 		return send_answer("HTTP/1.1 413 Payload Too "
-											 "Large\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
+											 "Large\r\nConnection: close\r\n\r\n");
 	}
 }
 

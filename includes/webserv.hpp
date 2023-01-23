@@ -2,11 +2,15 @@
 #ifndef DEBUG
 	#define DEBUG 0
 #endif
+#ifndef MAX_CLIENTS
+  #define MAX_CLIENTS 5000
+#endif
 
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>

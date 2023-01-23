@@ -8,11 +8,10 @@
 
 #include "webserv.hpp"
 
-fd_set Master::_readfds;					/// < The sockets fd which will be select
-int		 Master::_min_fd = INT_MAX; /// < The lower socket fd
-int		 Master::_max_fd = 0;				/// < The higher one
+int						 Master::_poll_id_amount = 0;
+int						 Master::_first_cli_id = 0;
+struct pollfd *Master::_pollfds = new struct pollfd[MAX_CLIENTS + 1];
 
-/* *******************************/
 /**
  * @brief The server launcher
  *
@@ -37,8 +36,10 @@ int main(int ac, char **av) {
 		if (!conf) return EXIT_FAILURE;
 		// Here we start the server and his environment using conf
 		cout << "Initialization of server...\n";
+    std::memset(Master::_pollfds, 0, sizeof(*Master::_pollfds) * (MAX_CLIENTS));
 		Env env(conf);
 		while (1) env.cycle();
+    delete[] Master::_pollfds;
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << "\n";
 		return EXIT_FAILURE;

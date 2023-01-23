@@ -2,16 +2,19 @@
 #include "webserv.hpp"
 
 class Client {
+	int													 _poll_id;
 	int													 _fd;
 	ip_port_t										 _ip_port;
 	Master											*_parent;
 	Server											*_server;
 	Env													*_env;
 	Route												*_route;
-	string											 _method, _uri, _query, _host, _header, _body;
+	string											 _header, _body;
+	string											 _method, _uri, _query, _host;
 	int													 _len;
 	bool												 _last_chunk;
-	std::map<string, vec_string> _request;
+	std::map<string, vec_string> _headers;
+	bool												 _finish;
 
 	void	 init(void);
 	bool	 getBody(string paquet);

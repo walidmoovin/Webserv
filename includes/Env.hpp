@@ -10,6 +10,5 @@ public:
 	Env(JSONNode *conf);
 	~Env(void);
 	void cycle(void);
-	void pre_select(void);
-	void post_select(void);
+	void post_poll(void);
 };

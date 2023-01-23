@@ -64,7 +64,9 @@ std::vector<Master *> Server::create_masters(JSONNode *server) {
 	for (std::vector<ip_port_t>::iterator listen = _listens.begin(); listen < _listens.end(); listen++) {
 		if (listen->ip.at(0) != '[') try {
 				ret.push_back(new Master(*listen));
-			} catch (std::exception &e) { std::cerr << e.what() << '\n'; }
+			} catch (std::exception &e) {
+				std::cerr << "Ip: " << listen->ip << ", port: " << listen->port << " -> " << e.what() << '\n';
+			}
 		else cout << "Listen: IPv6 isn't supported\n";
 	}
 	return ret;
