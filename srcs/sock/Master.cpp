@@ -13,7 +13,7 @@
  */
 Master::~Master(void) {
 	close(_fd);
-	cout << "Destroyed master socket\n";
+	if (DEBUG) cout << "Destroyed master socket\n";
 }
 
 /**
@@ -40,7 +40,7 @@ Master::Master(ip_port_t list) : _listen(list) {
 #ifdef __APPLE__
 	fcntl(socket, F_SETFL, O_NONBLOCK);
 #endif
-	cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
+	if(!SILENT) cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
 	_pollfds[_poll_id_amount].fd = _fd;
 	_pollfds[_poll_id_amount].events = POLLIN | POLLPRI;
 	_poll_id = _poll_id_amount;
@@ -67,14 +67,19 @@ void Master::post_poll(Env *env) {
 #endif
 		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr), ntohs(_address.sin_port));
 		Client	 *new_cli = new Client(new_socket, cli_listen, this);
-		_childs.push_back(new_cli);
-		for (int i = _first_cli_id; i < MAX_CLIENTS; i++) {
-			if (_pollfds[i].fd != 0) continue;
-			_pollfds[i].fd = new_socket;
-			_pollfds[i].events = POLLIN | POLLPRI;
-			new_cli->_poll_id = i;
-			_poll_id_amount++;
-      break;
+		if (_poll_id_amount > MAX_CLIENTS) {
+			new_cli->send_error(503);
+			delete new_cli;
+		} else {
+			_childs.push_back(new_cli);
+			for (int i = _first_cli_id; i < MAX_CLIENTS; i++) {
+				if (_pollfds[i].fd != 0) continue;
+				_pollfds[i].fd = new_socket;
+			  _pollfds[i].events = POLLIN | POLLPRI;
+				new_cli->_poll_id = i;
+				_poll_id_amount++;
+				break;
+			}
 		}
 	}
 	int child_fd;
@@ -96,6 +101,7 @@ void Master::post_poll(Env *env) {
 				_poll_id_amount--;
 			} else if ((*it)->getRequest(env, buffer)) {
 				(*it)->handleRequest();
+			  _pollfds[i].events = POLLOUT;
 				if ((*it)->_finish) {
 					delete (*it);
 					_childs.erase(it);
@@ -104,7 +110,7 @@ void Master::post_poll(Env *env) {
 					_pollfds[i].revents = 0;
 					_poll_id_amount--;
 				}
-			}
+			} else _pollfds[i].events = POLLIN | POLLPRI;
 		}
 	}
 }

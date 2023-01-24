@@ -1,6 +1,10 @@
 #pragma once
 #ifndef DEBUG
 	#define DEBUG 0
+  #define SILENT 0
+#endif
+#ifndef SILENT
+  #define SILENT 1
 #endif
 #ifndef MAX_CLIENTS
   #define MAX_CLIENTS 5000

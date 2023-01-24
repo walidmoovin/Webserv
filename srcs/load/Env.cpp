@@ -27,7 +27,7 @@ Env::Env(JSONNode *conf) {
 				this->_masters.insert(this->_masters.end(), tmp_s.begin(), tmp_s.end());
 			}
 		}
-		Master::_first_cli_id = Master::_poll_id_amount - 1;
+		Master::_first_cli_id = Master::_poll_id_amount;
 		if ((node = conf->obj()["allowed_methods"])) {
 			JSONList lst = node->lst();
 			for (JSONList::iterator it = lst.begin(); it < lst.end(); it++) {
@@ -55,7 +55,7 @@ Env::~Env() {
  * - refresh and handle requests
  */
 void Env::cycle(void) {
-	cout << "|===||===| Waiting some HTTP request... |===||===|\n";
+  if (!SILENT) cout << "|===||===| Waiting some HTTP request... |===||===|\n";
 	int pollResult = poll(Master::_pollfds, Master::_poll_id_amount + 1, 5000);
 	if ((pollResult < 0) && (errno != EINTR)) std::cerr << "Select: " << strerror(errno) << "\n";
 	if (pollResult > 0) post_poll();
@@ -66,7 +66,7 @@ void Env::cycle(void) {
  * connection, etc..) and parse requests recieved.
  */
 void Env::post_poll() {
-	cout << "==> Handle requests and answers:\n";
+  if (!SILENT) cout << "==> Handle requests and answers:\n";
 	for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++) try {
 			(*it)->post_poll(this);
 		} catch (std::exception &e) { std::cerr << e.what(); }

@@ -15,13 +15,15 @@ inline string get_extension(string str) {
 
 Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip_port), _parent(parent) {
 	init();
-	cout << "New connection, socket fd is " << fd << ", ip is : " << _ip_port.ip << ", port : " << _ip_port.port << "\n";
+	if (!SILENT)
+		cout << "New connection, socket fd is " << fd << ", ip is : " << _ip_port.ip << ", port : " << _ip_port.port
+				 << "\n";
 }
 
 Client::~Client(void) {
 	close(_fd);
 	_headers.clear();
-	cout << "Host disconnected, ip " << _ip_port.ip << ", port " << _ip_port.port << "\n";
+	if (!SILENT) cout << "Host disconnected, ip " << _ip_port.ip << ", port " << _ip_port.port << "\n";
 }
 
 void Client::init(void) {
@@ -125,7 +127,7 @@ void Client::handleRequest(void) {
 	}
 	string ret;
 	string req_path = _route->getRoot() + _uri;
-	std::cout << "||-> Request for " << req_path << " received <-||\n";
+	if (!SILENT) std::cout << "||-> Request for " << req_path << " received <-||\n";
 	string cgi_path = _route->_cgi.size()		 ? _route->_cgi[get_extension(req_path)]
 										: _server->_cgi.size() ? _server->_cgi[get_extension(req_path)]
 																					 : "";
@@ -164,7 +166,7 @@ void Client::cgi(string cgi_path, string path) {
 
 	send(_fd, "HTTP/1.1 200 OK\r\n", 17, MSG_NOSIGNAL);
 	if (!std::ifstream(cgi_path.c_str()).good()) return send_error(404);
-    if (DEBUG) std::cout << "Send cgi\n";
+	if (DEBUG) std::cout << "Send cgi\n";
 	if (fork() == 0) {
 		const char **args = new const char *[cgi_path.length() + 1];
 		args[0] = cgi_path.c_str();
@@ -228,4 +230,5 @@ void Client::send_answer(string msg) {
 	write(_fd, msg.c_str(), msg.length());
 #endif
 	init();
+	_finish = true;
 }

@@ -16,6 +16,8 @@ $(NAME): $(OBJS)
 debug:
 	$(CXX) -I includes -Werror -Wextra -Wall -std=c++98 -g   $(SRCS) -o $(NAME) -D DEBUG=1
 
+verbose:
+	$(CXX) -I includes -Werror -Wextra -Wall -std=c++98 -g   $(SRCS) -o $(NAME) -D SILENT=0
 clean:
 	rm -rf $(OBJS)
 
