@@ -1,4 +1,4 @@
-/**
+/*
  * @file Server.cpp
  * @brief The servers object. One is created for each config server.
  * @author Narnaud
@@ -87,14 +87,11 @@ Route *Server::choose_route(string uri) {
 		loc_words = split((*loc_it).first, "/");
 		vec_string::iterator loc_word = loc_words.begin();
 		vec_string::iterator uri_word = uri_words.begin();
-		while (uri_word != uri_words.end()) {
-			while (uri_word != uri_words.end() && *uri_word == "") uri_word++;
-			while (loc_word != loc_words.end() && *loc_word == "") loc_word++;
-			if (loc_word == loc_words.end()) return ((*loc_it).second);
-			if (*uri_word != *loc_word) break;
-			uri_word++;
-			loc_word++;
+		while (*loc_word == *uri_word) {
+			while (*++loc_word == "") {}
+			while (*++uri_word == "") {}
 		}
+		if (loc_word == loc_words.end()) return ((*loc_it).second);
 	}
 	return this;
 }

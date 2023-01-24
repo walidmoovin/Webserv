@@ -40,7 +40,7 @@ Master::Master(ip_port_t list) : _listen(list) {
 #ifdef __APPLE__
 	fcntl(socket, F_SETFL, O_NONBLOCK);
 #endif
-	if (!SILENT) cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
+	cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
 	_pollfds[_poll_id_amount].fd = _fd;
 	_pollfds[_poll_id_amount].events = POLLIN | POLLPRI;
 	_poll_id = _poll_id_amount;

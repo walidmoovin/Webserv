@@ -14,7 +14,7 @@ $(NAME): $(OBJS)
 	$(CXX) $(OBJS) -o $(NAME)
 
 debug:
-	$(CXX) -I includes -Werror -Wextra -Wall -std=c++98 -g   $(SRCS) -o $(NAME) -D DEBUG=1
+	$(CXX) -I includes -Werror -Wextra -Wall -std=c++98 -g   $(SRCS) -o $(NAME) -D DEBUG=1 SILENT=0
 
 verbose:
 	$(CXX) -I includes -Werror -Wextra -Wall -std=c++98 -g   $(SRCS) -o $(NAME) -D SILENT=0
