@@ -22,6 +22,10 @@ Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip
 
 Client::~Client(void) {
 	close(_fd);
+  Master::_pollfds[_poll_id].fd = 0;
+	Master::_pollfds[_poll_id].events = 0;
+  Master::_pollfds[_poll_id].revents = 0;
+	Master::_poll_id_amount--;
 	_headers.clear();
 	if (!SILENT) cout << "Host disconnected, ip " << _ip_port.ip << ", port " << _ip_port.port << "\n";
 }

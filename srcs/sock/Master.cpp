@@ -19,7 +19,7 @@ Master::~Master(void) {
 /**
  * @brief Constructor
  * Try to create a socket listening to ip and port defined by input.
- * If no exception if thrown, the creation success and the socket is then ready to select for new clients.
+ * If no exception if thrown, the creation success and the socket is then ready to listen for new clients.
  *
  * @param list An ip_port_t struct which contain the ip and the port the master listen.
  */
@@ -40,7 +40,7 @@ Master::Master(ip_port_t list) : _listen(list) {
 #ifdef __APPLE__
 	fcntl(socket, F_SETFL, O_NONBLOCK);
 #endif
-	if(!SILENT) cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
+	if (!SILENT) cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
 	_pollfds[_poll_id_amount].fd = _fd;
 	_pollfds[_poll_id_amount].events = POLLIN | POLLPRI;
 	_poll_id = _poll_id_amount;
@@ -48,15 +48,9 @@ Master::Master(ip_port_t list) : _listen(list) {
 }
 
 /**
- * @brief Checkk master and his clients sockets after select performed.
- * - First look for new clients
- * - Then handle clients awaiting action:
- *   - Disconnect them if nothing's new on the socket (request altready handled)
- *   - Read and parse request else until it's ready to answer and does it.
- *
- * @param env The environment object which contain the liste of servers to know which one the client is trying to reach.
+ * @brief Check master and his clients sockets after poll performed.
  */
-void Master::post_poll(Env *env) {
+void Master::check_socket(void) {
 	int addrlen = sizeof(_address);
 
 	if (_pollfds[_poll_id].revents & POLLIN) { /// < incomming master request
@@ -75,40 +69,44 @@ void Master::post_poll(Env *env) {
 			for (int i = _first_cli_id; i < MAX_CLIENTS; i++) {
 				if (_pollfds[i].fd != 0) continue;
 				_pollfds[i].fd = new_socket;
-			  _pollfds[i].events = POLLIN | POLLPRI;
+				_pollfds[i].events = POLLIN | POLLPRI;
 				new_cli->_poll_id = i;
 				_poll_id_amount++;
 				break;
 			}
 		}
 	}
+}
+
+/**
+ * @brief Handle master's childs.
+ * Loop along _childs
+ *  if poll even incomming on the child socket:
+ *   - give 1023 next sockets bits to Client methods to handle.
+ *   - if Request is fully received, does the answer and flag the socket for outcomming event.
+ *   - if request isn't fully received, flag the socket for incomming event.
+ *   - if read returned 0, delete client.
+ * @param env The environment object.
+ */
+void Master::check_childs(Env *env) {
 	int child_fd;
 	for (std::vector<Client *>::iterator it = _childs.begin(); it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
 		int i = (*it)->_poll_id;
 		if (_pollfds[i].fd > 0 && _pollfds[i].revents & POLLIN) {
 
-			char buffer[128];
-			int	 valread = read(child_fd, buffer, 127);
+			char buffer[1024];
+			int	 valread = read(child_fd, buffer, 1023);
 			buffer[valread] = '\0';
 			if (valread == 0) {
-				// getpeername(child_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
 				delete (*it);
 				_childs.erase(it);
-				_pollfds[i].fd = 0;
-				_pollfds[i].events = 0;
-				_pollfds[i].revents = 0;
-				_poll_id_amount--;
 			} else if ((*it)->getRequest(env, buffer)) {
 				(*it)->handleRequest();
-			  _pollfds[i].events = POLLOUT;
+				_pollfds[i].events = POLLOUT;
 				if ((*it)->_finish) {
 					delete (*it);
 					_childs.erase(it);
-					_pollfds[i].fd = 0;
-					_pollfds[i].events = 0;
-					_pollfds[i].revents = 0;
-					_poll_id_amount--;
 				}
 			} else _pollfds[i].events = POLLIN | POLLPRI;
 		}

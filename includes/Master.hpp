@@ -11,11 +11,12 @@ public:
 	Master(ip_port_t listen);
 	~Master(void);
 
-	void		post_poll(Env *env);
+	void		check_socket(void);
+	void		check_childs(Env *env);
 	Server *choose_server(Env *env, string host);
 
-	ip_port_t						 _listen;
-	static int					 _poll_id_amount;
-	static int					 _first_cli_id;
+	ip_port_t							_listen;
+	static int						_poll_id_amount;
+	static int						_first_cli_id;
 	static struct pollfd *_pollfds;
 };

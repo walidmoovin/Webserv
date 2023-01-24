@@ -50,24 +50,18 @@ Env::~Env() {
 
 /**
  * @brief A Wevserv cycle:
- * - append sockets to listen to select list
- * - select ehem
- * - refresh and handle requests
+ * - poll the Master::pollfds array
+ * - for each master socket, call his own post_poll method to check and handle the sockets flaged.
  */
 void Env::cycle(void) {
-  if (!SILENT) cout << "|===||===| Waiting some HTTP request... |===||===|\n";
+	if (!SILENT) cout << "|===||===| Waiting some HTTP request... |===||===|\n";
 	int pollResult = poll(Master::_pollfds, Master::_poll_id_amount + 1, 5000);
 	if ((pollResult < 0) && (errno != EINTR)) std::cerr << "Select: " << strerror(errno) << "\n";
-	if (pollResult > 0) post_poll();
-}
-
-/**
- * @brief Refresh all master_sockets and their clients datas (disconnect, new
- * connection, etc..) and parse requests recieved.
- */
-void Env::post_poll() {
-  if (!SILENT) cout << "==> Handle requests and answers:\n";
-	for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++) try {
-			(*it)->post_poll(this);
-		} catch (std::exception &e) { std::cerr << e.what(); }
+	if (pollResult > 0) {
+		if (!SILENT) cout << "==> Handle requests and answers:\n";
+		for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++) try {
+				(*it)->check_socket();
+				(*it)->check_childs(this);
+			} catch (std::exception &e) { std::cerr << e.what(); }
+	}
 }
