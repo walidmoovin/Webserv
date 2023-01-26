@@ -54,11 +54,11 @@ Env::~Env() {
  * - for each master socket, call his own post_poll method to check and handle the sockets flaged.
  */
 void Env::cycle(void) {
-	if (!SILENT) cout << "|===||===| Waiting some HTTP request... |===||===|\n";
+	//if (!SILENT) cout << "|===||===| Waiting some HTTP request... |===||===|\n";
 	int pollResult = poll(Master::_pollfds, Master::_poll_id_amount + 1, 5000);
 	if ((pollResult < 0) && (errno != EINTR)) std::cerr << "Select: " << strerror(errno) << "\n";
 	if (pollResult > 0) {
-		if (!SILENT) cout << "==> Handle requests and answers:\n";
+		//if (!SILENT) cout << "==> Handle requests and answers:\n";
 		for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++) try {
 				(*it)->check_socket();
 				(*it)->check_childs(this);

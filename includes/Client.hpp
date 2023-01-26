@@ -10,13 +10,17 @@ class Client {
 	Env													*_env;
 	Route												*_route;
 	string											 _header, _body;
+	std::map<string, vec_string> _headers;
 	string											 _method, _uri, _query, _host;
 	int													 _len;
 	bool												 _last_chunk;
-	std::map<string, vec_string> _headers;
+	bool												 _keepalive;
+	int													 _death_time;
+	time_t											 _requests_done;
 	bool												 _finish;
 
 	void	 init(void);
+	void	 debug(bool head);
 	bool	 getBody(string paquet);
 	bool	 parseHeader(Env *env);
 	string header_pick(string key, size_t id);

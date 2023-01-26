@@ -4,7 +4,6 @@
 
 ## ToDo/ToFix:
 
-- [] compare host and server_name for route choice
 - [] organize answer structure
 - [] default html pages (404, 503 ) ??
 - [] limit client body
@@ -13,12 +12,12 @@
   - [] hard test segmented request
   - [] verify upload of files
   - [] what to do with content ?
-- [] CGI behavior
-  - [] based on files extensions
-  - [] 
 - [] STRESS TEST!! Server must stay available!!
 - [] Server shout never indefinitly wait.
 - [] PUT non-text file may finish because of eof char.
+
+## Notes:
+- too low keep_alive amount badly close sockets and produce infinit client load.
 
 ## Behavior:
 

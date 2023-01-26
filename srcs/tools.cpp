@@ -56,6 +56,14 @@ ip_port_t get_ip_port_t(string ip, int port) {
 }
 
 string read_file(string path) {
+  std::ifstream file(path.c_str());
+  if (!file.good()) return "";
+	std::stringstream tmp;
+	tmp << file.rdbuf();
+  return tmp.str();
+}
+
+string file_answer(string path){
 	struct stat info;
 	if (stat(path.c_str(), &info) != 0) {
 		std::cerr << "stat() error on " << path << ": " << strerror(errno) << "\n";
@@ -75,6 +83,7 @@ string read_file(string path) {
 			<< "\r\n"
 			<< body;
 	return (ret.str());
+
 }
 
 string getMime(string path) {

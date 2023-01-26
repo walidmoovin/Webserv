@@ -6,13 +6,18 @@
 			"server_name": "localhost",
 			"listens": ["localhost:8080"],
 			"root": "public/",
-			"return": "301 https://$host$uri"
+			"return": [301, "http://webserv.doc/"]
 		},
     {
       "server_name": "webserv.doc",
       "listens": ["localhost"],
       "root": "html/",
-      "indexs": ["index.html"]
+      "indexs": ["index.html"],
+      "keepalive_requests": 20,
+      "error_pages": {
+        "/error3xx.html": [301, 302, 307, 308],
+        "/error4xx.html": [400, 403, 404, 405, 408, 413, 429]
+    }
     },
     {
       "server_name": "localhost",
@@ -24,11 +29,15 @@
 			"listens": ["192.168.62.61:8080", "localhost", "555"],
 			"root": "public/html/",
 			"indexs": ["basique.html"],
+      "error_pages": {
+        "/error404.html": [404]
+      },
 			"cgi": {
 				".php": "/usr/bin/php-cgi",
 				".py": "/usr/bin/python"
 			},
 			"client_max_body_size": 10000,
+      "keepalive_time": 60,
 			"locations": {
 				"/docs/": {
 					"root": "public/resources/",

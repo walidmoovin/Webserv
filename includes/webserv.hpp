@@ -3,10 +3,10 @@
 	#define DEBUG 0
 #endif
 #ifndef SILENT
-  #define SILENT 1
+	#define SILENT 1
 #endif
 #ifndef MAX_CLIENTS
-  #define MAX_CLIENTS 5000
+	#define MAX_CLIENTS 5000
 #endif
 
 #include <arpa/inet.h>
@@ -66,6 +66,7 @@ ip_port_t	 get_ip_port_t(string listen);
 ip_port_t	 get_ip_port_t(string ip, int port);
 string		 getMime(string path);
 string		 read_file(string path);
+string		 file_answer(string path);
 
 // debug
 void debug_block(string name, string content);
