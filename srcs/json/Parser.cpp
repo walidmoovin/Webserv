@@ -1,12 +1,5 @@
 #include "webserv.hpp"
 
-/**
- * @file Parser.cpp
- * @brief The parser lead the Tokenizer to travel along configuration file and create nodes with tokens.
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-17
- */
 JSONParser::JSONParser(const string filename) : tokenizer(filename) {}
 
 JSONNode *JSONParser::parse() {

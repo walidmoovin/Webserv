@@ -17,6 +17,7 @@ bool isAPort(string str) {
 	return true;
 }
 
+// split a string by a string delimiter
 vec_string split(string str, string delim) {
 	string		 temp(str);
 	string		 token;
@@ -32,6 +33,7 @@ vec_string split(string str, string delim) {
 	return tokens;
 }
 
+// return a struct ip_port_t from a listen block
 ip_port_t get_ip_port_t(string listen) {
 	size_t sep_pos = listen.rfind(':');
 	if (sep_pos == string::npos) {

@@ -2,14 +2,14 @@
 #include "webserv.hpp"
 
 class Server : public Route {
-	string										_name;	 ///< The server name
-	std::map<string, Route *> _routes; ///< The server's routings with a route object as object and his location as key.
+	string	_name;
+	std::map<string, Route *>	_routes;
 
 public:
-	std::vector<ip_port_t> _listens; ///< The list of listens the server which are linked to the server.
+	std::vector<ip_port_t> _listens;
 	Server(JSONNode *server);
 	~Server(void);
 	std::vector<Master *> create_masters(JSONNode *server);
-	Route								 *choose_route(string uri);
-	string								getName(void);
+	Route	*choose_route(string uri);
+	string	getName(void);
 };

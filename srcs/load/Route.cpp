@@ -1,22 +1,16 @@
-/**
- * @file Route.cpp
- * @brief A location class which handle
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-12
- */
 #include "webserv.hpp"
 
 /**
  * @brief Constructor
  *
- * A route is an object which define how to handle a request. Each Server is
- * Route inherited and each location block lead to a new Route object.
+ * - Routes define how requests will be handled
+ * - Server inherits from Route class
+ * - Each route is associated to a location
  *
  * @param server The Server parent of the route. NULL if the object is the
  * server.
- * @param location The uri associatied to the route.
- * @param datas The JSONNode giving configuration.
+ * @param location The location of the route.
+ * @param datas The JSONNode config of the route.
  */
 Route::Route(Server *server, string location, JSONNode *datas) : _server(server), _location(location) {
 	JSONObject object = datas->obj();
@@ -55,10 +49,7 @@ Route::Route(Server *server, string location, JSONNode *datas) : _server(server)
 	if ((tmp = object["client_max_body_size"])) _client_max_body_size = tmp->nbr();
 }
 
-/// @brief Destructor
 Route::~Route(void) {}
-
-// Getters
 string Route::getLocation(void) { return _location; }
 string Route::getRoot(void) { return _root; }
 

@@ -1,11 +1,3 @@
-/**
- * @file Client.cpp
- * @brief The client sockets class which keep keep clients information and
- * handle answer to them.
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-12
- */
 #include "webserv.hpp"
 #include <iomanip>
 #include <iostream>
@@ -16,6 +8,12 @@ inline string get_extension(string str) {
 	else return "";
 }
 
+/*
+ *	Constructor
+ * @param fd The socket file descriptor.
+ * @param ip_port The ip and port of the client.
+ * @param parent The parent Master.
+*/
 Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip_port), _parent(parent) {
 	_requests_done = 0;
 	_death_time = 0;
@@ -28,6 +26,10 @@ Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip
 				 << "\n";
 }
 
+/*
+ *	Destructor
+ * Close the socket and remove the pollfd from the pollfds array.
+*/
 Client::~Client(void) {
 	close(_fd);
 	Master::_pollfds[_poll_id].fd = 0;

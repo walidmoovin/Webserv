@@ -1,25 +1,10 @@
-/**
- * @file Master.cpp
- * @brief The master sockets class which receive each incomming new client.
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-12
- */
 #include "webserv.hpp"
 
 /**
- * @brief Destructor Close master socket descriptor.
- */
-Master::~Master(void) {
-	close(_fd);
-	if (DEBUG) cout << "Destroyed master socket\n";
-}
-
-/**
  * @brief Constructor
- * Try to create a socket listening to ip and port defined by input.
- * If no exception if thrown, the creation success and the socket is then ready
- * to listen for new clients.
+ *
+ * -Create a master socket that listen to ip and port defined by input.
+ * -Socket is ready to listen for new clients if no exception is thrown.
  *
  * @param list An ip_port_t struct which contain the ip and the port the master
  * listen.
@@ -49,12 +34,20 @@ Master::Master(ip_port_t list) : _listen(list) {
 }
 
 /**
- * @brief Check master and his clients sockets after poll performed.
+ * @brief Destructor Close master socket descriptor.
+ */
+Master::~Master(void) {
+	close(_fd);
+	if (DEBUG) cout << "Destroyed master socket\n";
+}
+
+/**
+ * @brief check if there is a new client to accept on the master socket
  */
 void Master::check_socket(void) {
 	int addrlen = sizeof(_address);
 
-	if (_pollfds[_poll_id].revents & POLLIN) { /// < incomming master request
+	if (_pollfds[_poll_id].revents & POLLIN) {
 		int new_socket = accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
 		if (new_socket < 0) throw std::runtime_error("accept() error:" + string(strerror(errno)));
 #ifdef __APPLE__

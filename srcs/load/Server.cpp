@@ -1,18 +1,10 @@
-/*
- * @file Server.cpp
- * @brief The servers object. One is created for each config server.
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-12
- */
-
 #include "webserv.hpp"
 
 /**
  * @brief Constructor.
  *
- * The Route constructor scrap the routing informations (index, root,
- * autoindex ...) and the Server one the others ones (server_name, sub-routes)
+ * - from a server block JSONNode get by parser.
+ * - create a route for each location block.
  *
  * @param server A server block JSONNode get by parser.
  *
@@ -31,7 +23,6 @@ Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 
 /**
  * @brief Destructor.
- *
  * Delete alocated routes.
  */
 Server::~Server(void) {
@@ -45,12 +36,9 @@ Server::~Server(void) {
 string Server::getName(void) { return _name; }
 
 /**
- * @brief Create server's defined sockets:
+ * @brief create master sockets from listen blocks in server block.
  *
  * @param server A server block node from JSONParser.
- *
- * @retrn A vector containing all the succesfull created sockets using
- * listens from the server block.
  */
 std::vector<Master *> Server::create_masters(JSONNode *server) {
 	JSONObject						datas = server->obj();
@@ -70,7 +58,6 @@ std::vector<Master *> Server::create_masters(JSONNode *server) {
 		else cout << "Listen: IPv6 isn't supported\n";
 	}
 	return ret;
-	//	else if ((tmp = create_master("0.0.0.0"))) ret.push_back(tmp); return ret;
 }
 
 /**

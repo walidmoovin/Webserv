@@ -1,16 +1,9 @@
-/**
- * @file Env.cpp
- * @brief The main server object. Contain all servers and sockets.
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-17
- */
 #include "webserv.hpp"
 
 /**
  * @brief Constructor
  *
- * The instance contain servers defined in configuration file by servers list and sockets by listens ones.
+ * Set-up server's environment by parsing the JsonParser output.
  *
  * @param conf The JsonParser output
  */
@@ -18,6 +11,7 @@ Env::Env(JSONNode *conf) {
 	try {
 		JSONNode *node;
 		JSONList	lst;
+		// look for the "servers" key in the json file
 		if ((node = conf->obj()["servers"])) {
 			lst = conf->obj()["servers"]->lst();
 			for (std::vector<JSONNode *>::iterator it = lst.begin(); it < lst.end(); it++) {
@@ -27,7 +21,7 @@ Env::Env(JSONNode *conf) {
 				this->_masters.insert(this->_masters.end(), tmp_s.begin(), tmp_s.end());
 			}
 		}
-		Master::_first_cli_id = Master::_poll_id_amount;
+		Master::_first_cli_id = Master::_poll_id_amount; // first client socket id is one socket after last master socket
 		if ((node = conf->obj()["allowed_methods"])) {
 			JSONList lst = node->lst();
 			for (JSONList::iterator it = lst.begin(); it < lst.end(); it++) {
@@ -50,8 +44,10 @@ Env::~Env() {
 
 /**
  * @brief A Wevserv cycle:
- * - poll the Master::pollfds array
- * - for each master socket, call his own post_poll method to check and handle the sockets flaged.
+ *
+ * - Poll all master sockets
+ * - Check if a new connection is pending
+ * - Check if a child has finished
  */
 void Env::cycle(void) {
 	// if (!SILENT) cout << "|===||===| Waiting some HTTP request... |===||===|\n";

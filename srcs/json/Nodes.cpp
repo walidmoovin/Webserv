@@ -1,35 +1,10 @@
-/**
- * @file Nodes.cpp
- * @brief A node object is a container for each json values or blocks. It can contain either a std::map<String,
- * std::Node*> a std::vector<Node*> a String* a number or a bool.
- *
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-17
- */
 #include "webserv.hpp"
 
-/**
- * @brief Destructor
- * Destroy Node and all sub Nodes he contain.
- */
-JSONNode::~JSONNode(void) {
-	switch (type) {
-	case OBJECT:
-		for (JSONObject::iterator it = values.object->begin(); it != values.object->end(); it++) { delete it->second; }
-		delete values.object;
-		break;
-	case LIST:
-		for (JSONList::iterator it = values.list->begin(); it != values.list->end(); it++) { delete *it; }
-		delete values.list;
-		break;
-	case STRING:
-		delete values.str;
-		break;
-	default:
-		break;
-	}
-}
+/*
+- In the parser, a node is created and added to the object map.
+- The node is then passed to the parse function for the value.
+*/
+
 JSONObject JSONNode::obj() {
 	if (type == OBJECT) return *values.object;
 	throw std::logic_error("Improper return");
@@ -72,3 +47,25 @@ void JSONNode::setBoo(bool v) {
 	type = BOOLEAN;
 }
 void JSONNode::setNull() { type = NULL_TYPE; }
+
+/**
+ * @brief Destructor
+ * Destroy Node and all sub Nodes he contain.
+ */
+JSONNode::~JSONNode(void) {
+	switch (type) {
+	case OBJECT:
+		for (JSONObject::iterator it = values.object->begin(); it != values.object->end(); it++) { delete it->second; }
+		delete values.object;
+		break;
+	case LIST:
+		for (JSONList::iterator it = values.list->begin(); it != values.list->end(); it++) { delete *it; }
+		delete values.list;
+		break;
+	case STRING:
+		delete values.str;
+		break;
+	default:
+		break;
+	}
+}

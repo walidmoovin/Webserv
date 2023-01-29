@@ -1,17 +1,9 @@
-/**
- * @file Token.cpp
- * @brief The tokenizer read json file and when asked for give us the next token encounter and his type.
- * @author Narnaud
- * @version 0.1
- * @date 2023-01-17
- */
 #include "webserv.hpp"
 
 /**
  * @brief Constructor
- * Open conf file if he is readeable.
  *
- * @param fileName conf file path.
+ * @param fileName configuration file path.
  */
 Tokenizer::Tokenizer(string fileName) {
 	file.open(fileName.c_str(), std::ios::in);
