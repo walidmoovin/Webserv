@@ -23,9 +23,9 @@ Master::Master(ip_port_t list) : _listen(list) {
 	if (bind(_fd, (struct sockaddr *)&_address, sizeof(_address)) && close(_fd) <= 0)
 		throw std::runtime_error("bind() error: " + string(strerror(errno)));
 	if (listen(_fd, 3) < 0 && close(_fd) <= 0) throw std::runtime_error("listen() error: " + string(strerror(errno)));
-#ifdef __APPLE__
-	fcntl(socket, F_SETFL, O_NONBLOCK);
-#endif
+	#ifdef __APPLE__
+		fcntl(socket, F_SETFL, O_NONBLOCK);
+	#endif
 	cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
 	_pollfds[_poll_id_amount].fd = _fd;
 	_pollfds[_poll_id_amount].events = POLLIN | POLLPRI;
@@ -52,9 +52,9 @@ void Master::check_socket(void) {
 	if (_pollfds[_poll_id].revents & POLLIN) {
 		int new_socket = accept(_fd, (struct sockaddr *)&_address, (socklen_t *)&addrlen);
 		if (new_socket < 0) throw std::runtime_error("accept() error:" + string(strerror(errno)));
-#ifdef __APPLE__
-		fcntl(new_socket, F_SETFL, O_NONBLOCK);
-#endif
+		#ifdef __APPLE__
+			fcntl(new_socket, F_SETFL, O_NONBLOCK);
+		#endif
 		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr), ntohs(_address.sin_port));
 		Client	 *new_cli = new Client(new_socket, cli_listen, this);
 		if (_poll_id_amount > MAX_CLIENTS) {

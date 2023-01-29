@@ -48,6 +48,7 @@ Client::~Client(void) {
  *  If the client has a server, check if the max requests is reached.
  *  Reset all the variables.
  *
+ * @Usage Called when the client is created and when the request is done.
  */
 void Client::init(void) {
 	_requests_done++;
@@ -123,6 +124,14 @@ void Client::debug(bool head) {
 	std::cout << "\n";
 }
 
+/**
+ * @brief Get the body of the request.
+ *  If the body is not complete, return false.
+ *  If the body is complete, return true.
+ *  If the body is chunked, get the body by chunks.
+ *  If the body is not chunked, get the body by the content-length.
+ *	We detect the end of the body with the content-length.
+ */
 bool Client::getBody(string paquet) {
 	vec_string					 lines = split(paquet, "\r\n");
 	vec_string::iterator it;
@@ -327,11 +336,11 @@ void Client::send_error(int error_code, string opt) {
  */
 void Client::send_answer(string msg) {
 	if (DEBUG) debug_block("ANSWER: ", msg);
-#ifdef __linux__
-	send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-#elif __APPLE__
-	write(_fd, msg.c_str(), msg.length());
-#endif
-	init();
-	if (!_keepalive) _finish = true;
+	#ifdef __linux__
+		send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+	#elif __APPLE__
+		write(_fd, msg.c_str(), msg.length());
+	#endif
+		init();
+		if (!_keepalive) _finish = true;
 }
