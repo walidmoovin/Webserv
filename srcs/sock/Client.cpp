@@ -8,12 +8,13 @@ inline string get_extension(string str) {
 	else return "";
 }
 
-/*
- *	Constructor
+/**
+ * @brief Constructor
+ *
  * @param fd The socket file descriptor.
  * @param ip_port The ip and port of the client.
  * @param parent The parent Master.
-*/
+ */
 Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip_port), _parent(parent) {
 	_requests_done = 0;
 	_death_time = 0;
@@ -26,10 +27,11 @@ Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip
 				 << "\n";
 }
 
-/*
- *	Destructor
- * Close the socket and remove the pollfd from the pollfds array.
-*/
+/**
+ * @brief Destructor
+ *
+ * Close the socket and delete the client.
+ */
 Client::~Client(void) {
 	close(_fd);
 	Master::_pollfds[_poll_id].fd = 0;
@@ -40,6 +42,13 @@ Client::~Client(void) {
 	if (!SILENT) cout << "Host disconnected, ip " << _ip_port.ip << ", port " << _ip_port.port << "\n";
 }
 
+/**
+ * @brief Initialize the client.
+ *  If the client has a route, check if the max requests is reached.
+ *  If the client has a server, check if the max requests is reached.
+ *  Reset all the variables.
+ *
+ */
 void Client::init(void) {
 	_requests_done++;
 	if (_route && _route->_max_requests > 0) {
@@ -52,6 +61,28 @@ void Client::init(void) {
 	_last_chunk = false;
 	_headers.clear();
 }
+
+/**
+ * @brief Get the request from the client.
+ *  If the request is not complete, return false (we detect the end of the request with the double \r\n).
+ *  If the request is complete, parse the header and get the body if there is one.
+ *
+ */
+bool Client::getRequest(Env *env, string paquet) {
+	if (DEBUG) debug_block("Paquet: ", paquet);
+	if (header_pick("Method:", 0) != "") return getBody(paquet);
+	vec_string lines = split(paquet, "\r\n");
+	for (vec_string::iterator it = lines.begin(); it < lines.end(); it++) {
+		size_t pos = paquet.find("\r\n");
+		if (pos != string::npos) paquet.erase(0, pos + 2);
+		else paquet.clear();
+		_header += *it + (it + 1 != lines.end() ? "\r\n" : "");
+		if (_header.find("\r\n\r\n") != string::npos)
+			return !parseHeader(env) ? false : (_len != 0 ? getBody(paquet) : true);
+	}
+	return false;
+}
+
 template <typename T> void tab(T t, const int &width) {
 	std::cout << std::left << std::setw(width) << std::setfill(' ') << t;
 }
@@ -92,21 +123,6 @@ void Client::debug(bool head) {
 	std::cout << "\n";
 }
 
-bool Client::getRequest(Env *env, string paquet) {
-	if (DEBUG) debug_block("Paquet: ", paquet);
-	if (header_pick("Method:", 0) != "") return getBody(paquet);
-	vec_string lines = split(paquet, "\r\n");
-	for (vec_string::iterator it = lines.begin(); it < lines.end(); it++) {
-		size_t pos = paquet.find("\r\n");
-		if (pos != string::npos) paquet.erase(0, pos + 2);
-		else paquet.clear();
-		_header += *it + (it + 1 != lines.end() ? "\r\n" : "");
-		if (_header.find("\r\n\r\n") != string::npos)
-			return !parseHeader(env) ? false : (_len != 0 ? getBody(paquet) : true);
-	}
-	return false;
-}
-
 bool Client::getBody(string paquet) {
 	vec_string					 lines = split(paquet, "\r\n");
 	vec_string::iterator it;
@@ -121,7 +137,6 @@ bool Client::getBody(string paquet) {
 			_len -= ((*it).length() + 2);
 		}
 	}
-	// if (_body.size())
 	_body.resize(_body.length() - 2);
 	_len += 2;
 	return (_last_chunk && _len == 0) ? true : false;

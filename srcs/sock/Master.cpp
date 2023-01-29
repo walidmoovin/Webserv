@@ -35,6 +35,7 @@ Master::Master(ip_port_t list) : _listen(list) {
 
 /**
  * @brief Destructor Close master socket descriptor.
+ *
  */
 Master::~Master(void) {
 	close(_fd);
@@ -43,6 +44,7 @@ Master::~Master(void) {
 
 /**
  * @brief check if there is a new client to accept on the master socket
+ *
  */
 void Master::check_socket(void) {
 	int addrlen = sizeof(_address);
@@ -73,14 +75,12 @@ void Master::check_socket(void) {
 }
 
 /**
- * @brief Handle master's childs.
- * Loop along _childs
- *  if poll even incomming on the child socket:
- *   - give 1023 next sockets bits to Client methods to handle.
- *   - if Request is fully received, does the answer and flag the socket for
- * outcomming event.
- *   - if request isn't fully received, flag the socket for incomming event.
- *   - if read returned 0, delete client.
+ * @brief Loop on all childs and check if there is something to read on them.
+ *  -Next 1023 bits of the socket are given to the Client methods to handle.
+ *  -Verify if the request is fully received and if so, flag the socket for outcomming event.
+ *  -If the request isn't fully received, flag the socket for incomming event.
+ *  -If the request is fully received, delete the Client object and remove it from the vector.
+ *
  * @param env The environment object.
  */
 void Master::check_childs(Env *env) {
