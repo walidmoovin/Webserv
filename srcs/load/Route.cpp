@@ -13,7 +13,7 @@
  * @param datas The JSONNode config of the route.
  */
 Route::Route(Server *server, string location, JSONNode *datas) : _server(server), _location(location) {
-	JSONObject object = datas->obj();
+	JSONObject	object = datas->obj();
 	JSONNode	*tmp;
 	_autoindex = false;
 	_client_max_body_size = -1;

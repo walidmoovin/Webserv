@@ -9,7 +9,7 @@
  */
 Env::Env(JSONNode *conf) {
 	try {
-		JSONNode *node;
+		JSONNode	*node;
 		JSONList	lst;
 		// look for the "servers" key in the json file
 		if ((node = conf->obj()["servers"])) {

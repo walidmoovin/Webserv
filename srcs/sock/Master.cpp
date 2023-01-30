@@ -55,8 +55,7 @@ void Master::check_socket(void) {
 		#ifdef __APPLE__
 			fcntl(new_socket, F_SETFL, O_NONBLOCK);
 		#endif
-		ip_port_t cli_listen = get_ip_port_t(inet_ntoa(_address.sin_addr), ntohs(_address.sin_port));
-		Client	 *new_cli = new Client(new_socket, cli_listen, this);
+		Client	 *new_cli = new Client(new_socket, (ip_port_t){0, inet_ntoa(_address.sin_addr), ntohs(_address.sin_port)}, this);
 		if (_poll_id_amount > MAX_CLIENTS) {
 			new_cli->send_error(503);
 			delete new_cli;

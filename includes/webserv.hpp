@@ -41,7 +41,7 @@ using std::strerror;
 using std::string;
 
 typedef struct ip_port_s {
-	int		 fd;
+	int fd;
 	string ip;
 	int		 port;
 } ip_port_t;
