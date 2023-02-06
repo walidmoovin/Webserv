@@ -39,9 +39,9 @@ using std::strerror;
 using std::string;
 
 typedef struct ip_port_s {
-	int fd;
-	string ip;
-	int		 port;
+	int 	fd;
+	string	ip;
+	int		port;
 } ip_port_t;
 
 class JSONNode;
@@ -51,19 +51,19 @@ class Route;
 class Master;
 class Client;
 
-typedef std::map<string, JSONNode *> JSONObject;
-typedef std::vector<JSONNode *>			 JSONList;
-typedef std::vector<string>					 vec_string;
+typedef std::map<string, JSONNode *>	JSONObject;
+typedef std::vector<JSONNode *>			JSONList;
+typedef std::vector<string>				vec_string;
 
-void			*ft_memset(void *b, int c, size_t len);
-bool			 isAPort(string str);
-vec_string split(string str, string delim);
-ip_port_t	 get_ip_port_t(string listen);
-ip_port_t	 get_ip_port_t(string ip, int port);
-string		 getMime(string path);
-string		 read_file(string path);
-string		 file_answer(string path);
-void debug_block(string name, string content);
+void		*ft_memset(void *b, int c, size_t len);
+bool		isAPort(string str);
+vec_string	split(string str, string delim);
+ip_port_t	get_ip_port_t(string listen);
+ip_port_t	get_ip_port_t(string ip, int port);
+string		getMime(string path);
+string		read_file(string path);
+string		file_answer(string path);
+void		debug_block(string name, string content);
 
 #include "Client.hpp"
 #include "Master.hpp"

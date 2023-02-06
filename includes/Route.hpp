@@ -8,15 +8,11 @@ protected:
 	bool	_autoindex;
 
 public:
-	vec_string	_indexs, _allowed_methods;
-	std::map<string, string> _cgi;
-	int	_client_max_body_size;
-	int	_timeout;
-	int	_max_requests;
-	int	_ret_code;
-	string _upload_folder;
-	string	_ret_uri;
-	std::map<int, string>	_err_page;
+	vec_string					_indexs, _allowed_methods;
+	std::map<string, string>	_cgi;
+	int							_client_max_body_size, _timeout, _max_requests, _ret_code;
+	string 						_upload_folder, _ret_uri;
+	std::map<int, string>		_err_page;
 
 	Route(Server *server, string location, JSONNode *datas);
 	~Route(void);

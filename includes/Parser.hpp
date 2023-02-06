@@ -2,8 +2,8 @@
 #include "webserv.hpp"
 
 class JSONParser {
-	std::fstream file;
-	Tokenizer		 tokenizer;
+	std::fstream 		file;
+	Tokenizer			tokenizer;
 
 public:
 	JSONParser(const string filename);

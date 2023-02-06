@@ -47,7 +47,6 @@ void Client::init(void) {
 	}
 	_method = _uri = _host = _header = _body = "";
 	_len = 0;
-	_last_chunk = false;
 	_headers.clear();
 }
 
@@ -123,7 +122,7 @@ bool Client::getBody(string paquet) {
 	}
 	_body.resize(_body.length() - 2);
 	_len += 2;
-	return (_last_chunk && _len == 0) ? true : false;
+	return (_len == 0) ? true : false;
 }
 
 bool Client::parseHeader(Env *env) {
@@ -155,7 +154,6 @@ bool Client::parseHeader(Env *env) {
 	string len = header_pick("Content-Length:", 0).c_str();
 	if (len != "") {
 		_len = std::atoi(len.c_str());
-		_last_chunk = true;
 		int max_len = _route->_client_max_body_size > 0		 ? _route->_client_max_body_size
 									: _server->_client_max_body_size > 0 ? _server->_client_max_body_size
 																											 : INT_MAX;

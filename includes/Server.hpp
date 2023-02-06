@@ -2,7 +2,7 @@
 #include "webserv.hpp"
 
 class Server : public Route {
-	string	_name;
+	string						_name;
 	std::map<string, Route *>	_routes;
 
 public:

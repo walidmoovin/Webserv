@@ -5,9 +5,9 @@ class JSONNode {
 public:
 	JSONObject	obj(void);
 	JSONList	lst(void);
-	string	str(void);
-	int	nbr(void);
-	bool	boo(void);
+	string		str(void);
+	int			nbr(void);
+	bool		boo(void);
 	~JSONNode(void);
 
 private:
@@ -15,9 +15,9 @@ private:
 	union Values {
 		JSONObject	*object;
 		JSONList	*list;
-		string	*str;
-		int	nbr;
-		bool	bValue;
+		string		*str;
+		int			nbr;
+		bool		bValue;
 	} values;
 	Type type;
 

@@ -26,8 +26,7 @@
 			"root": "public/html/",
 			"indexs": ["basique.html"],
 			"error_pages": {
-				"/error404.html": [404],
-				"/error403.html": [403]
+				"/error404.html": [404]
 			},
 			"upload_folder" : "public/upload/",
 			"cgi": {
