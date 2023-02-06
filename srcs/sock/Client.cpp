@@ -8,13 +8,6 @@ inline string get_extension(string str) {
 	else return "";
 }
 
-/**
- * @brief Constructor
- *
- * @param fd The socket file descriptor.
- * @param ip_port The ip and port of the client.
- * @param parent The parent Master.
- */
 Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip_port), _parent(parent) {
 	_requests_done = 0;
 	_death_time = 0;
@@ -27,11 +20,6 @@ Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip
 				 << "\n";
 }
 
-/**
- * @brief Destructor
- *
- * Close the socket and delete the client.
- */
 Client::~Client(void) {
 	close(_fd);
 	Master::_pollfds[_poll_id].fd = 0;
@@ -70,7 +58,6 @@ void Client::init(void) {
  *
  */
 bool Client::getRequest(Env *env, string paquet) {
-	if (DEBUG) debug_block("Paquet: ", paquet);
 	if (header_pick("Method:", 0) != "") return getBody(paquet);
 	vec_string lines = split(paquet, "\r\n");
 	for (vec_string::iterator it = lines.begin(); it < lines.end(); it++) {
@@ -124,20 +111,11 @@ void Client::debug(bool head) {
 	std::cout << "\n";
 }
 
-/**
- * @brief Get the body of the request.
- *  If the body is not complete, return false.
- *  If the body is complete, return true.
- *  If the body is chunked, get the body by chunks.
- *  If the body is not chunked, get the body by the content-length.
- *	We detect the end of the body with the content-length.
- */
 bool Client::getBody(string paquet) {
 	vec_string					 lines = split(paquet, "\r\n");
 	vec_string::iterator it;
 
 	for (it = lines.begin(); it < lines.end(); it++) {
-		if (DEBUG) cout << "Remaining length: " << _len << "\n";
 		if ((*it).length() && _len <= 0 && header_pick("Transfer-Encoding:", 0) == "chunked") {
 			_len = std::strtol((*it).c_str(), 0, 16) + 2;
 			_last_chunk = _len == 2 ? true : false;
@@ -153,7 +131,6 @@ bool Client::getBody(string paquet) {
 
 bool Client::parseHeader(Env *env) {
 	vec_string lines, method, line;
-	if (DEBUG) cout << "Parsing header...\n";
 	lines = split(_header, "\r\n");
 	method = split(lines.at(0), " ");
 	_headers["Method:"] = method;
@@ -179,7 +156,6 @@ bool Client::parseHeader(Env *env) {
 	if (_server->_timeout) _death_time = _server->_timeout + t.tv_sec;
 	_route = _server->choose_route(_uri);
 	if (_route->_timeout) _death_time = _route->_timeout + t.tv_sec;
-	if (DEBUG) debug_header();
 	string len = header_pick("Content-Length:", 0).c_str();
 	if (len != "") {
 		_len = std::atoi(len.c_str());
@@ -204,10 +180,6 @@ bool Client::check_method(void) {
 }
 
 void Client::handleRequest(void) {
-	if (DEBUG) {
-		debug_block("Header: ", _header);
-		debug_block("Body: ", _body);
-	}
 	if (_route->_ret_uri != "") send_error(_route->_ret_code, _route->_ret_uri);
 	else if (_server->_ret_uri != "") send_error(_server->_ret_code, _server->_ret_uri);
 	else {
@@ -224,7 +196,6 @@ void Client::handleRequest(void) {
 		string cgi_path = _route->_cgi.size()		 ? _route->_cgi[get_extension(req_path)]
 											: _server->_cgi.size() ? _server->_cgi[get_extension(req_path)]
 																						 : "";
-		if (DEBUG) cout << "Path: " << req_path << "\n";
 		if (!check_method()) send_error(405);
 		else {
 			if ((ret = _route->getIndex(_uri, req_path)) == "") ret = file_answer(req_path);
@@ -261,7 +232,6 @@ void Client::cgi(string cgi_path, string path) {
 
 	send(_fd, "HTTP/1.1 200 OK\r\n", 17, MSG_NOSIGNAL);
 	if (!std::ifstream(cgi_path.c_str()).good()) return send_error(404);
-	if (DEBUG) std::cout << "Send cgi\n";
 	if (fork() == 0) {
 		const char **args = new const char *[cgi_path.length() + 1];
 		args[0] = cgi_path.c_str();
@@ -335,7 +305,6 @@ void Client::send_error(int error_code, string opt) {
  * @param msg The HTTP message to send.
  */
 void Client::send_answer(string msg) {
-	if (DEBUG) debug_block("ANSWER: ", msg);
 	#ifdef __linux__
 		send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 	#elif __APPLE__

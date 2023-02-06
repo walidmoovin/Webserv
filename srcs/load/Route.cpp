@@ -70,7 +70,6 @@ string Route::getIndex(string uri, string path) {
 	vec_string::iterator it;
 
 	if ((dir = opendir(path.c_str()))) {
-		if (DEBUG) cout << "get index(): path=" << path << "\n";
 		body << "<h3 style=\"text-align: center;\">" << path << " files :</h3>\n<ul>\n";
 		while ((entry = readdir(dir)) != NULL) {
 			if (entry->d_name[0] == '.') continue;
@@ -84,7 +83,6 @@ string Route::getIndex(string uri, string path) {
 		closedir(dir);
 	}
 	if (!dir || !_autoindex) return "";
-	if (DEBUG) cout << "Getting autoindex\n";
 	ret << "Content-type: text/html \r\n";
 	ret << "Content-length: " << body.str().length() << "\r\n";
 	ret << "\r\n" << body.str();

@@ -30,33 +30,26 @@ JSONNode *JSONParser::parseObject() {
 			token = tokenizer.getToken();
 			switch (token.type) {
 			case CURLY_OPEN: {
-				if (DEBUG) cout << "=object=|" << key << "|===>>\n";
 				(*keyObjectMap)[key] = parseObject();
-				if (DEBUG) cout << "<<===end object\n";
 				break;
 			}
 			case ARRAY_OPEN: {
-				if (DEBUG) cout << "-list-|" << key << "|--->>\n";
 				(*keyObjectMap)[key] = parseList();
-				if (DEBUG) cout << "<<---end list\n";
 				break;
 			}
 			case STRING: {
 				tokenizer.rollBackToken();
 				(*keyObjectMap)[key] = parseString();
-				if (DEBUG) cout << key << "='" << (*keyObjectMap)[key]->str() << "'\n";
 				break;
 			}
 			case NUMBER: {
 				tokenizer.rollBackToken();
 				(*keyObjectMap)[key] = parseNumber();
-				if (DEBUG) cout << key << "=" << (*keyObjectMap)[key]->nbr() << "\n";
 				break;
 			}
 			case BOOLEAN: {
 				tokenizer.rollBackToken();
 				(*keyObjectMap)[key] = parseBoolean();
-				if (DEBUG) cout << key << "(BOOL)\n";
 				break;
 			}
 			case NULL_TYPE: {
@@ -92,27 +85,21 @@ JSONNode *JSONParser::parseList() {
 			JSONNode *subNode;
 			switch (token.type) {
 			case CURLY_OPEN: {
-				if (DEBUG) cout << "=object===>>\n";
 				subNode = parseObject();
-				if (DEBUG) cout << "<<===end object\n";
 				break;
 			}
 			case ARRAY_OPEN: {
-				if (DEBUG) cout << "-list--->>\n";
 				subNode = parseList();
-				if (DEBUG) cout << "<<---end list\n";
 				break;
 			}
 			case STRING: {
 				tokenizer.rollBackToken();
 				subNode = parseString();
-				if (DEBUG) cout << "|'" << subNode->str() << "'";
 				break;
 			}
 			case NUMBER: {
 				tokenizer.rollBackToken();
 				subNode = parseNumber();
-				if (DEBUG) cout << "|" << subNode->nbr();
 				break;
 			}
 			case BOOLEAN: {

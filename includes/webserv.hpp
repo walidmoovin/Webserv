@@ -1,7 +1,4 @@
 #pragma once
-#ifndef DEBUG
-	#define DEBUG 0
-#endif
 #ifndef SILENT
 	#define SILENT 1
 #endif

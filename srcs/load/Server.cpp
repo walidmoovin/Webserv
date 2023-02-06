@@ -21,25 +21,13 @@ Server::Server(JSONNode *server) : Route(NULL, "/", server) {
 	}
 }
 
-/**
- * @brief Destructor.
- * Delete alocated routes.
- */
 Server::~Server(void) {
 	for (std::map<string, Route *>::iterator it = _routes.begin(); it != _routes.end(); it++) delete (*it).second;
 	cout << "Server destroyed!\n";
 }
 
-/**
- * @return The server name (server_name)
- */
 string Server::getName(void) { return _name; }
 
-/**
- * @brief create master sockets from listen blocks in server block.
- *
- * @param server A server block node from JSONParser.
- */
 std::vector<Master *> Server::create_masters(JSONNode *server) {
 	JSONObject						datas = server->obj();
 	std::vector<Master *> ret;

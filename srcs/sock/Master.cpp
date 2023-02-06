@@ -33,19 +33,10 @@ Master::Master(ip_port_t list) : _listen(list) {
 	_poll_id_amount++;
 }
 
-/**
- * @brief Destructor Close master socket descriptor.
- *
- */
 Master::~Master(void) {
 	close(_fd);
-	if (DEBUG) cout << "Destroyed master socket\n";
 }
 
-/**
- * @brief check if there is a new client to accept on the master socket
- *
- */
 void Master::check_socket(void) {
 	int addrlen = sizeof(_address);
 
@@ -73,15 +64,6 @@ void Master::check_socket(void) {
 	}
 }
 
-/**
- * @brief Loop on all childs and check if there is something to read on them.
- *  -Next 1023 bits of the socket are given to the Client methods to handle.
- *  -Verify if the request is fully received and if so, flag the socket for outcomming event.
- *  -If the request isn't fully received, flag the socket for incomming event.
- *  -If the request is fully received, delete the Client object and remove it from the vector.
- *
- * @param env The environment object.
- */
 void Master::check_childs(Env *env) {
 	int child_fd;
 	for (std::vector<Client *>::iterator it = _childs.begin(); it < _childs.end(); it++) {
@@ -108,24 +90,6 @@ void Master::check_childs(Env *env) {
 	}
 }
 
-/**
- *
- * @brief Choose the server which must handle a request
- * Each server can lsiten multiple range_ip:port and each range_it:port can be
- * listen by multiple servers. So for each request, we must look at the socket
- * which given us the client to know how the client came. If multiple servers
- * listen the range from where the client came, ones with exact correspondance
- * are prefered. If there are multiples servers listening exactly the ip the
- * client try to reach or which listen a range which contain it, the first one
- * which have the same server_name as the host the client used to reach server
- * is used, else it's the first one of exact correspondance or first one which
- * have the ip requested in his listen range.
- *
- * @param env The environment object.
- * @param host The host the client used to reached the server.
- *
- * @return The server object choosen to handle the request.
- */
 Server *Master::choose_server(Env *env, string host) {
 	std::vector<Server *> exact, inrange;
 	vec_string						ip_listen, ip_required;
@@ -149,7 +113,6 @@ Server *Master::choose_server(Env *env, string host) {
 			if (is_inrange) inrange.push_back(*server);
 		}
 	}
-	if (DEBUG) std::cout << "req: " << _listen.ip << ":" << _listen.port << "\n";
 	if (exact.size() == 0) {
 		for (std::vector<Server *>::iterator server = inrange.begin(); server < inrange.end(); server++) {
 			if (host == (*server)->getName()) return *server;

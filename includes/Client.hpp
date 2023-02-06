@@ -30,10 +30,6 @@ class Client {
 	void	send_error(int error_code, string opt = "");
 	void	send_answer(string msg);
 
-#ifdef DEBUG
-	void	debug_header(void);
-#endif
-
 public:
 	Client(int fd, ip_port_t ip_port, Master *parent);
 	~Client(void);
