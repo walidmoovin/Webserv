@@ -1,10 +1,10 @@
-import stringOL6B6K5P654JS2D48
+import string
 import random
  
 print "Content-type: text/html"
 print
 # initializing size of string
-N = 1000000
+N = 1000
  
 # generating random strings
 res = ''.join(random.choice(string.ascii_uppercase +

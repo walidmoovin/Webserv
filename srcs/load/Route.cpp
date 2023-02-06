@@ -23,6 +23,7 @@ Route::Route(Server *server, string location, JSONNode *datas) : _server(server)
 		_ret_uri = tmp->lst()[1]->str();
 	}
 	if ((tmp = object["autoindex"])) _autoindex = tmp->boo();
+	if ((tmp = object["upload_folder"])) _upload_folder = tmp->str();
 	if ((tmp = object["keepalive_time"])) _timeout = tmp->nbr();
 	else _timeout = 0;
 	if ((tmp = object["keepalive_requests"])) _max_requests = tmp->nbr();

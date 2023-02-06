@@ -116,10 +116,7 @@ bool Client::getBody(string paquet) {
 	vec_string::iterator it;
 
 	for (it = lines.begin(); it < lines.end(); it++) {
-		if ((*it).length() && _len <= 0 && header_pick("Transfer-Encoding:", 0) == "chunked") {
-			_len = std::strtol((*it).c_str(), 0, 16) + 2;
-			_last_chunk = _len == 2 ? true : false;
-		} else if (_len > 0 || it != lines.begin()) {
+		if (_len > 0 || it != lines.begin()) {
 			_body += *it + "\r\n";
 			_len -= ((*it).length() + 2);
 		}
@@ -141,8 +138,7 @@ bool Client::parseHeader(Env *env) {
 		}
 	}
 	_method = header_pick("Method:", 0);
-	if ((_method == "POST" || _method == "PUT") && header_pick("Content-Length:", 0) == "" &&
-			header_pick("Transfer-Encoding:", 0) != "chunked")
+	if ((_method == "POST" || _method == "PUT") && header_pick("Content-Length:", 0) == "")
 		return (send_error(400), false);
 	vec_string uri_split = split(header_pick("Method:", 1), "?");
 	_uri = uri_split.at(0);
@@ -211,12 +207,18 @@ void Client::handleRequest(void) {
 }
 
 void Client::create_file(string path) {
+	struct stat st;
+	if (stat(_route->_upload_folder.c_str(), &st) != 0) {
+		send_error(403);
+		return;
+	}
+	if (_route->_upload_folder != "") path = _route->_upload_folder + _uri;
 	std::ofstream file(path.c_str());
 	if (!file.good()) send_error(403);
 	else {
 		file << _body;
 		file.close();
-		send_answer("HTTP/1.1 201 Accepted\r\n\r\n");
+		send_answer("HTTP/1.1 201 Accepted\r\nContent-Length:0\r\n\r\n");
 	}
 }
 
@@ -270,33 +272,23 @@ void Client::send_error(int error_code, string opt) {
 		error_path = _server->_err_page[error_code];
 		if (error_path != "") body = file_answer(_server->correctUri(error_path));
 	} else body = file_answer(_route->correctUri(error_path));
-
-	switch (error_code) {
-	case 301:
-		return send_answer("HTTP/1.1 301 Moved Permanently\r\nLocation: " + opt + "\r\n" + body + "\r\n");
-	case 302:
-		return send_answer("HTTP/1.1 302 Found\r\nLocation: " + opt + "\r\n" + body + "\r\n");
-	case 307:
-		return send_answer("HTTP/1.1 307 Temporary Redirect\r\nLocation: " + opt + "\r\n" + body + "\r\n");
-	case 308:
-		return send_answer("HTTP/1.1 308 Permanent Redirect\r\nLocation: " + opt + "\r\n" + body + "\r\n");
-	case 400:
-		return send_answer("HTTP/1.1 400 Bad Request\r\n" + body + "\r\n");
-	case 403:
-		return send_answer("HTTP/1.1 403 Forbidden\r\n" + body + "\r\n");
-	case 404:
-		return send_answer("HTTP/1.1 404 Not Found\r\n" + body + "\r\n");
-	case 405:
-		return send_answer("HTTP/1.1 405 Method Not Allowed\r\nConnection: "
-											 "close\r\n" +
-											 body + "\r\n");
-	case 408:
-		return send_answer("HTTP/1.1 408 Request Timeout\r\nConnection: close\r\n" + body + "\r\n");
-	case 413:
-		return send_answer("HTTP/1.1 413 Payload Too Large\r\nConnection: close\r\n" + body + "\r\n");
-	case 429:
-		return send_answer("HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\n" + body + "\r\n");
-	}
+	std::map<int, string> error_strings;
+	error_strings[301] = "Moved Permanently";
+	error_strings[302] = "Found";
+	error_strings[307] = "Temporary Redirect";
+	error_strings[308] = "Permanent Redirect";
+	error_strings[400] = "Bad Request";
+	error_strings[403] = "Forbidden";
+	error_strings[404] = "Not Found";
+	error_strings[405] = "Method Not Allowed";
+	error_strings[408] = "Request Timeout";
+	error_strings[413] = "Payload Too Large";
+	error_strings[429] = "Too Many Requests";
+	std::stringstream ret;
+	if (error_code >= 300 && error_code < 400) ret << "HTTP/1.1 " << error_code << " " << error_strings[error_code] << "\r\nLocation: " << opt << "\r\n\r\n";
+	else if (error_path != "") ret << "HTTP/1.1 " << error_code << " " << error_strings[error_code] << "\r\n" << body << "\r\n";
+	else ret << "HTTP/1.1 " << error_code << " " << error_strings[error_code] << "\r\nContent-Length:0\r\n\r\n";
+	return send_answer(ret.str());
 }
 
 /**

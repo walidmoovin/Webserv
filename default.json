@@ -13,11 +13,7 @@
 			"listens": ["localhost"],
 			"root": "html/",
 			"indexs": ["index.html"],
-			"keepalive_time": 3,
-			"error_pages": {
-				"/error3xx.html": [301, 302, 307, 308],
-				"/error4xx.html": [400, 403, 404, 405, 408, 413, 429]
-			}
+			"keepalive_time": 3
 		},
 		{
 			"server_name": "localhost",
@@ -30,8 +26,10 @@
 			"root": "public/html/",
 			"indexs": ["basique.html"],
 			"error_pages": {
-				"/error404.html": [404]
+				"/error404.html": [404],
+				"/error403.html": [403]
 			},
+			"upload_folder" : "public/upload/",
 			"cgi": {
 				".php": "/usr/bin/php-cgi",
 				".py": "/usr/bin/python"

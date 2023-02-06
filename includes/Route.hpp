@@ -14,6 +14,7 @@ public:
 	int	_timeout;
 	int	_max_requests;
 	int	_ret_code;
+	string _upload_folder;
 	string	_ret_uri;
 	std::map<int, string>	_err_page;
 
