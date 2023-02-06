@@ -1,5 +1,0 @@
-<map id="Env::post_select" name="Env::post_select">
-<area shape="rect" id="node1" title="Refresh all master_sockets and their clients datas (disconnect, new connection, etc...." alt="" coords="243,5,369,31"/>
-<area shape="rect" id="node2" href="$classEnv.html#a0c8b92f45308987231f9b0be8751d39f" title="A Wevserv cycle:" alt="" coords="108,5,195,31"/>
-<area shape="rect" id="node3" href="$webserv_8cpp.html#a0c99d968a34e803d378692bde2e3f18f" title="&lt; The amount of sockets listens" alt="" coords="5,5,60,31"/>
-</map>

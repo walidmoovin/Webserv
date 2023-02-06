@@ -1,8 +1,0 @@
-<map id="isAPort" name="isAPort">
-<area shape="rect" id="node1" title=" " alt="" coords="697,31,765,56"/>
-<area shape="rect" id="node2" href="$tools_8cpp.html#a6e7e23c21ae956b6859a6f3ec9793358" title=" " alt="" coords="543,31,649,56"/>
-<area shape="rect" id="node3" href="$classServer.html#a6c46d7b86956f508b1c0bfe125b03993" title="Master socket safe creation." alt="" coords="328,5,495,31"/>
-<area shape="rect" id="node6" href="$classMaster.html#a3ffb0ce7702a04ab7a9ec5dfa1ff6e42" title=" " alt="" coords="337,55,486,80"/>
-<area shape="rect" id="node4" href="$classServer.html#a5738134631f6bab9a26ca0687d86f21f" title="Create server&#39;s defined sockets:" alt="" coords="131,5,280,31"/>
-<area shape="rect" id="node5" href="$classEnv.html#ace0ebeb150673fa69526c14d8417d587" title=" " alt="" coords="5,5,83,31"/>
-</map>
