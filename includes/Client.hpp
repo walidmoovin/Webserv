@@ -17,6 +17,7 @@ class Client {
 	int			_death_time;
 	time_t		_requests_done;
 	bool		_finish;
+	int			_pid;
 
 	void	init(void);
 	void	debug(bool head);

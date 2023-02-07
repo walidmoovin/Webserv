@@ -1,3 +1,4 @@
+#!/Users/narnaud/.brew/bin/php-cgi
 <html>
     <head>
         <title>PHP Test</title>

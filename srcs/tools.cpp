@@ -83,7 +83,6 @@ string file_answer(string path){
 			<< "\r\n"
 			<< body;
 	return (ret.str());
-
 }
 
 string getMime(string path) {

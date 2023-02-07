@@ -24,7 +24,7 @@ Master::Master(ip_port_t list) : _listen(list) {
 		throw std::runtime_error("bind() error: " + string(strerror(errno)));
 	if (listen(_fd, 3) < 0 && close(_fd) <= 0) throw std::runtime_error("listen() error: " + string(strerror(errno)));
 	#ifdef __APPLE__
-		fcntl(socket, F_SETFL, O_NONBLOCK);
+		fcntl(_fd, F_SETFL, O_NONBLOCK);
 	#endif
 	cout << "New master socket with fd " << _fd << " which listen " << ip << ":" << port << "\n";
 	_pollfds[_poll_id_amount].fd = _fd;
@@ -69,7 +69,15 @@ void Master::check_childs(Env *env) {
 	for (std::vector<Client *>::iterator it = _childs.begin(); it < _childs.end(); it++) {
 		child_fd = (*it)->_fd;
 		int i = (*it)->_poll_id;
-		if (_pollfds[i].fd > 0 && _pollfds[i].revents & POLLIN) {
+		struct timeval t;
+		gettimeofday(&t, NULL);
+		if ((*it)->_death_time && t.tv_sec > (*it)->_death_time) {
+			(*it)->send_error(408);
+				delete (*it);
+				_childs.erase(it);
+			return;
+		}
+		if (!(*it)->_finish && _pollfds[i].fd > 0 && _pollfds[i].revents & POLLIN) {
 			char buffer[1024];
 			int	 valread = read(child_fd, buffer, 1023);
 			buffer[valread] = '\0';
@@ -81,12 +89,12 @@ void Master::check_childs(Env *env) {
 				(*it)->handleRequest();
 				_pollfds[i].events = POLLIN | POLLPRI | POLLOUT;
 				(*it)->debug(false);
+			} else _pollfds[i].events = POLLIN | POLLPRI;
+		}
 				if ((*it)->_finish) {
 					delete (*it);
 					_childs.erase(it);
 				}
-			} else _pollfds[i].events = POLLIN | POLLPRI;
-		}
 	}
 }
 

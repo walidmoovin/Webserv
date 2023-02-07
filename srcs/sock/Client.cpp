@@ -14,6 +14,7 @@ Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip
 	_finish = false;
 	_route = NULL;
 	_server = NULL;
+	_pid = 0;
 	init();
 	if (!SILENT)
 		cout << "New connection, socket fd is " << fd << ", ip is : " << _ip_port.ip << ", port : " << _ip_port.port
@@ -178,13 +179,6 @@ void Client::handleRequest(void) {
 	else if (_server->_ret_uri != "") send_error(_server->_ret_code, _server->_ret_uri);
 	else {
 		string				 ret;
-		struct timeval t;
-		gettimeofday(&t, NULL);
-		if (_death_time && t.tv_sec > _death_time) {
-			send_error(408);
-			_finish = true;
-			return;
-		}
 		string req_path = _route->getRoot() + _uri;
 		if (!SILENT) std::cout << "||-> Request for " << req_path << " received <-||\n";
 		string cgi_path = _route->_cgi.size()		 ? _route->_cgi[get_extension(req_path)]
@@ -197,7 +191,10 @@ void Client::handleRequest(void) {
 				if (_method == "POST" || _method == "PUT") create_file(req_path);
 				else send_error(404);
 			} else if (ret == "403") send_error(403);
-			else if (_method == "DELETE") std::remove(req_path.c_str());
+			else if (_method == "DELETE"){
+				std::remove(req_path.c_str());
+				send_answer("HTTP/1.1 200 OK \r\n\r\n");
+			}
 			else if (cgi_path != "") cgi(cgi_path, req_path);
 			else send_answer("HTTP/1.1 200 OK\r\n" + ret);
 		}
@@ -230,34 +227,51 @@ void Client::create_file(string path) {
 void Client::cgi(string cgi_path, string path) {
 	int pipe_in[2];
 
+	#ifdef __linux__
 	send(_fd, "HTTP/1.1 200 OK\r\n", 17, MSG_NOSIGNAL);
+	#elif __APPLE__
+	write(_fd, "HTTP/1.1 200 OK\r\n", 17);
+	#endif
 	if (!std::ifstream(cgi_path.c_str()).good()) return send_error(404);
 	if (fork() == 0) {
-		const char **args = new const char *[cgi_path.length() + 1];
-		args[0] = cgi_path.c_str();
+		const char **args = new const char *[path.length() + 1];
+		args[0] = path.c_str();
 		args[1] = NULL;
-		string			 path_info = "PATH_INFO=" + _route->getRoot();
-		string			 query = "QUERY_STRING=" + _query;
-		const char **env = new const char *[path_info.length() + query.length() + 2];
-		env[0] = path_info.c_str();
-		env[1] = query.c_str();
-		env[2] = NULL;
-		pipe(pipe_in);
+		std::vector<string> env_vec;
+
+		env_vec.push_back("REQUEST_METHOD=" + _method);
+		env_vec.push_back("QUERY_STRING=" + _query);
+		env_vec.push_back("PATH_INFO=" + _route->getRoot());
+		env_vec.push_back("PATH_TRANSLATED=" + path);
+		env_vec.push_back("SCRIPT_NAME=" + _uri);
+		env_vec.push_back("REDIRECT_STATUS=200");
+		string multi_part = header_pick("Content-Type:", 0) + " " + header_pick("Content-Type:", 1);
+		std::cout << multi_part << std::endl;
+		env_vec.push_back("CONTENT_TYPE=" + multi_part); 
 		std::stringstream tmp;
-		tmp << std::ifstream(path.c_str()).rdbuf();
-		string file = tmp.str();
-		write(pipe_in[1], file.c_str(), file.size());
+		tmp << "CONTENT_LENGTH=" << _body.length();
+		env_vec.push_back(tmp.str());
+		size_t env_size = 0;
+		for (std::vector<string>::iterator it = env_vec.begin(); it != env_vec.end(); it++)
+			env_size += (*it).size() + 1;
+		const char **env = new const char *[env_size];
+		int i = 0;
+		for (std::vector<string>::iterator it = env_vec.begin(); it != env_vec.end(); it++)
+			env[i++] = (*it).c_str();
+		env[i] = NULL;
+		pipe(pipe_in);
+		if (_body.size())
+			write(pipe_in[1], _body.c_str(), _body.size());
 		close(pipe_in[1]);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_in[0]);
 		dup2(_fd, STDOUT_FILENO);
 		close(_fd);
-		execve(cgi_path.c_str(), (char **)args, (char **)env);
+		execve(path.c_str(), (char **)args, (char **)env);
 		exit(1);
 	}
 	_finish = true;
 }
-
 /**
  * @brief Send an error answer to the client.
  *
