@@ -167,6 +167,12 @@ string Client::header_pick(string key, size_t id) { return _headers[key].size() 
 
 bool Client::check_method(void) {
 	vec_string allowed;
+	// std::cout << "Server allowed methods: ";
+	// for (vec_string::iterator it = _server->_allowed_methods.begin(); it < _server->_allowed_methods.end(); it++)
+	// 	std::cout << *it << " \n";
+	// std::cout << "\nRoute allowed methods: ";
+	// for (vec_string::iterator it = _route->_allowed_methods.begin(); it < _route->_allowed_methods.end(); it++)
+	// 	std::cout << *it << " \n";
 	if ((_route && (allowed = _route->_allowed_methods).size() > 0) ||
 			(_server && (allowed = _server->_allowed_methods).size() > 0) || ((allowed = _env->_allowed_methods).size() > 0))
 		return std::find(allowed.begin(), allowed.end(), _method) < allowed.end() ? true : false;
@@ -175,6 +181,7 @@ bool Client::check_method(void) {
 }
 
 void Client::handleRequest(void) {
+	if (!check_method()) return send_error(405);
 	if (_route->_ret_uri != "") send_error(_route->_ret_code, _route->_ret_uri);
 	else if (_server->_ret_uri != "") send_error(_server->_ret_code, _server->_ret_uri);
 	else {
@@ -184,20 +191,17 @@ void Client::handleRequest(void) {
 		string cgi_path = _route->_cgi.size()		 ? _route->_cgi[get_extension(req_path)]
 											: _server->_cgi.size() ? _server->_cgi[get_extension(req_path)]
 																						 : "";
-		if (!check_method()) send_error(405);
-		else {
-			if ((ret = _route->getIndex(_uri, req_path)) == "") ret = file_answer(req_path);
-			if (ret == "404") {
-				if (_method == "POST" || _method == "PUT") create_file(req_path);
-				else send_error(404);
-			} else if (ret == "403") send_error(403);
-			else if (_method == "DELETE"){
-				std::remove(req_path.c_str());
-				send_answer("HTTP/1.1 200 OK \r\n\r\n");
-			}
-			else if (cgi_path != "") cgi(cgi_path, req_path);
-			else send_answer("HTTP/1.1 200 OK\r\n" + ret);
+		if ((ret = _route->getIndex(_uri, req_path)) == "") ret = file_answer(req_path);
+		if (ret == "404") {
+			if (_method == "POST" || _method == "PUT") create_file(req_path);
+			else send_error(404);
+		} else if (ret == "403") send_error(403);
+		else if (_method == "DELETE"){
+			std::remove(req_path.c_str());
+			send_answer("HTTP/1.1 200 OK \r\n\r\n");
 		}
+		else if (cgi_path != "") cgi(cgi_path, req_path);
+		else send_answer("HTTP/1.1 200 OK\r\n" + ret);
 	}
 }
 
@@ -230,7 +234,11 @@ void Client::cgi(string cgi_path, string path) {
 	#ifdef __linux__
 	send(_fd, "HTTP/1.1 200 OK\r\n", 17, MSG_NOSIGNAL);
 	#elif __APPLE__
-	write(_fd, "HTTP/1.1 200 OK\r\n", 17);
+	int rwrite = write(_fd, "HTTP/1.1 200 OK\r\n", 17);
+	if (rwrite <= 0) {
+		std::cerr << "Error: write() failed" << std::endl;
+		return;
+	}
 	#endif
 	if (!std::ifstream(cgi_path.c_str()).good()) return send_error(404);
 	if (fork() == 0) {
@@ -260,8 +268,15 @@ void Client::cgi(string cgi_path, string path) {
 			env[i++] = (*it).c_str();
 		env[i] = NULL;
 		pipe(pipe_in);
+		int rwrite2;
 		if (_body.size())
-			write(pipe_in[1], _body.c_str(), _body.size());
+		{
+			rwrite2 = write(pipe_in[1], _body.c_str(), _body.size());
+			if (rwrite2 <= 0) {
+				std::cerr << "Error: write() failed" << std::endl;
+				return;
+			}
+		}
 		close(pipe_in[1]);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_in[0]);
@@ -312,7 +327,10 @@ void Client::send_answer(string msg) {
 	#ifdef __linux__
 		send(_fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
 	#elif __APPLE__
-		write(_fd, msg.c_str(), msg.length());
+		if (write(_fd, msg.c_str(), msg.length()) == -1) {
+			_finish = true;
+			return;
+		}
 	#endif
 		init();
 		if (!_keepalive) _finish = true;

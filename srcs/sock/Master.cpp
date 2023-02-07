@@ -80,6 +80,10 @@ void Master::check_childs(Env *env) {
 		if (!(*it)->_finish && _pollfds[i].fd > 0 && _pollfds[i].revents & POLLIN) {
 			char buffer[1024];
 			int	 valread = read(child_fd, buffer, 1023);
+			if (valread < 0) {
+				delete (*it);
+				_childs.erase(it);
+			}
 			buffer[valread] = '\0';
 			if (valread == 0) {
 				delete (*it);
