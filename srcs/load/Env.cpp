@@ -33,9 +33,10 @@ void Env::cycle(void) {
 	int pollResult = poll(Master::_pollfds, Master::_poll_id_amount + 1, 5000);
 	if ((pollResult < 0) && (errno != EINTR)) std::cerr << "Select: " << strerror(errno) << "\n";
 	if (pollResult > 0) {
-		for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++) try {
+		for (std::vector<Master *>::iterator it = this->_masters.begin(); it < this->_masters.end(); it++)
+      try {
 				(*it)->check_socket();
 				(*it)->check_childs(this);
-			} catch (std::exception &e) { std::cerr << e.what(); }
+			} catch (std::exception &e) { std::cerr << e.what() << "\n"; }
 	}
 }

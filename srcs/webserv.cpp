@@ -21,7 +21,7 @@ int main(int ac, char **av) {
 		std::memset(Master::_pollfds, 0, sizeof(*Master::_pollfds) * (MAX_CLIENTS));
 		Env env(conf);
 		while (1) env.cycle();
-    	delete[] Master::_pollfds;
+    delete[] Master::_pollfds;
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << "\n";
 		return EXIT_FAILURE;

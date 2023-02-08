@@ -2,8 +2,8 @@
 import string
 import random
  
-print "Content-type: text/html"
-print
+print("Content-type: text/html")
+print()
 # initializing size of string
 N = 10000000
  

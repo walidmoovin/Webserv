@@ -75,7 +75,10 @@ string Route::getIndex(string uri, string path) {
 		while ((entry = readdir(dir)) != NULL) {
 			if (entry->d_name[0] == '.') continue;
 			for (it = _indexs.begin(); it < _indexs.end(); it++) {
-				if (entry->d_name == *it) return (file_answer(path + "/" + *it));
+				if (entry->d_name == *it){
+          closedir(dir);
+          return (file_answer(path + "/" + *it));
+        } 
 			}
 			body << "<li><a href=\"" << uri + "/" + entry->d_name << "\">" << entry->d_name << "</a></li>\n";
 			if (stat(path.c_str(), &info) != 0) std::cerr << "stat() error on " << path << ": " << strerror(errno) << "\n";

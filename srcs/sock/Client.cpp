@@ -8,6 +8,45 @@ inline string get_extension(string str) {
 	else return "";
 }
 
+template <typename T> void tab(T t, const int &width) {
+	std::cout << std::left << std::setw(width) << std::setfill(' ') << t;
+}
+
+void Client::debug(bool head) {
+	if (head) {
+		std::cout << "Client " << _poll_id << " debug ===================================\n";
+		tab("Fd", 4);
+		tab("Ip", 12);
+		tab("Port", 6);
+		tab("Servername", 12);
+		tab("Route", 12);
+		tab("Method", 6);
+		tab("URI", 20);
+		tab("Query", 12);
+		tab("Host", 12);
+		tab("Len", 6);
+		tab("Keep", 4);
+		tab("Death", 6);
+		tab("Request", 6);
+		tab("Finish", 6);
+		std::cout << "\n";
+	}
+	tab(_fd, 4);
+	tab(_ip_port.ip, 12);
+	tab(_ip_port.port, 6);
+	tab(_server->getName(), 12);
+	tab(_route->getLocation(), 12);
+	tab(_method, 6);
+	tab(_uri, 20);
+	tab(_query, 12);
+	tab(_host, 12);
+	tab(_len, 6);
+	tab(_keepalive, 4);
+	tab(_death_time, 6);
+	tab(_requests_done, 6);
+	tab(_finish, 6);
+	std::cout << "\n";
+}
 Client::Client(int fd, ip_port_t ip_port, Master *parent) : _fd(fd), _ip_port(ip_port), _parent(parent) {
 	_requests_done = 0;
 	_death_time = 0;
@@ -45,9 +84,10 @@ void Client::init(void) {
 		if (_requests_done > _route->_max_requests) _finish = true;
 	} else if (_server && _server->_max_requests > 0) {
 		if (_requests_done > _server->_max_requests) _finish = true;
-	}
+  }
 	_method = _uri = _host = _header = _body = "";
 	_len = 0;
+  _last_chunk = false;
 	_headers.clear();
 }
 
@@ -66,49 +106,9 @@ bool Client::getRequest(Env *env, string paquet) {
 		else paquet.clear();
 		_header += *it + (it + 1 != lines.end() ? "\r\n" : "");
 		if (_header.find("\r\n\r\n") != string::npos)
-			return !parseHeader(env) ? false : (_len != 0 ? getBody(paquet) : true);
+			return !parseHeader(env) ? false : (_len != 0 || header_pick("Transfer-Encoding:", 0) == "chunked"? getBody(paquet) : true);
 	}
 	return false;
-}
-
-template <typename T> void tab(T t, const int &width) {
-	std::cout << std::left << std::setw(width) << std::setfill(' ') << t;
-}
-void Client::debug(bool head) {
-
-	if (head) {
-		std::cout << "Client " << _poll_id << " debug ===================================\n";
-		tab("Fd", 4);
-		tab("Ip", 12);
-		tab("Port", 6);
-		tab("Servername", 12);
-		tab("Route", 12);
-		tab("Method", 6);
-		tab("URI", 20);
-		tab("Query", 12);
-		tab("Host", 12);
-		tab("Len", 6);
-		tab("Keep", 4);
-		tab("Death", 6);
-		tab("Request", 6);
-		tab("Finish", 6);
-		std::cout << "\n";
-	}
-	tab(_fd, 4);
-	tab(_ip_port.ip, 12);
-	tab(_ip_port.port, 6);
-	tab(_server->getName(), 12);
-	tab(_route->getLocation(), 12);
-	tab(_method, 6);
-	tab(_uri, 20);
-	tab(_query, 12);
-	tab(_host, 12);
-	tab(_len, 6);
-	tab(_keepalive, 4);
-	tab(_death_time, 6);
-	tab(_requests_done, 6);
-	tab(_finish, 6);
-	std::cout << "\n";
 }
 
 bool Client::getBody(string paquet) {
@@ -116,14 +116,17 @@ bool Client::getBody(string paquet) {
 	vec_string::iterator it;
 
 	for (it = lines.begin(); it < lines.end(); it++) {
-		if (_len > 0 || it != lines.begin()) {
+    if ((*it).length() &&_len <= 0 && header_pick("Transfer-Encoding:", 0) == "chunked") {
+      _len = std::strtol((*it).c_str(), 0, 16) + 2;
+      _last_chunk = _len == 2 ? true : false;
+    } else if (_len > 0 || it != lines.begin()) {
 			_body += *it + "\r\n";
 			_len -= ((*it).length() + 2);
 		}
 	}
 	_body.resize(_body.length() - 2);
 	_len += 2;
-	return (_len == 0) ? true : false;
+	return (_last_chunk && _len == 0) ? true : false;
 }
 
 bool Client::parseHeader(Env *env) {
@@ -155,6 +158,7 @@ bool Client::parseHeader(Env *env) {
 	string len = header_pick("Content-Length:", 0).c_str();
 	if (len != "") {
 		_len = std::atoi(len.c_str());
+    _last_chunk = true;
 		int max_len = _route->_client_max_body_size > 0		 ? _route->_client_max_body_size
 									: _server->_client_max_body_size > 0 ? _server->_client_max_body_size
 																											 : INT_MAX;
@@ -241,7 +245,7 @@ void Client::cgi(string cgi_path, string path) {
 	}
 	#endif
 	if (!std::ifstream(cgi_path.c_str()).good()) return send_error(404);
-	if (fork() == 0) {
+	if ((_pid = fork() == 0)) {
 		const char **args = new const char *[path.length() + 1];
 		args[0] = path.c_str();
 		args[1] = NULL;
@@ -285,7 +289,6 @@ void Client::cgi(string cgi_path, string path) {
 		execve(path.c_str(), (char **)args, (char **)env);
 		exit(1);
 	}
-	_finish = true;
 }
 /**
  * @brief Send an error answer to the client.

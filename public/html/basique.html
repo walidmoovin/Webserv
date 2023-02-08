@@ -27,12 +27,19 @@
 		<input type = "submit" value = "Submit" />
 	</form>
 
-	<h1> File Creation test: </h1>
+	<h1> Form + javascript unknown file creation: </h1>
 	<form action="/" method="post" enctype="text/plain">
 	Filename: <input type="text" id="changeAction" />
 	Content: <input name="content" type="text">
 	<button type="submit">Create file</button>
 	</form>
+
+  <h1> Python file upload: </h1>
+  <form enctype = "multipart/form-data"
+                   action = "upload.py" method = "post">
+    <p>File: <input type = "file" name = "filename" /></p>
+    <p><input type = "submit" value = "Upload" /></p>
+  </form>
 
 	<script>
         const button1 = document.querySelector('button.first');

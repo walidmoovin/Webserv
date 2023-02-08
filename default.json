@@ -9,7 +9,7 @@
 		},
 		{
 			"server_name": "localhost",
-			"listens": ["localhost", "555"],
+			"listens": ["localhost", "5555"],
 			"root": "public/html/",
 			"indexs": ["basique.html"],
 			"error_pages": {
@@ -21,7 +21,7 @@
 				".py": "/usr/bin/python"
 			},
 			"client_max_body_size": 10000,
-			"keepalive_time": 25,
+			"keepalive_time": 1,
 			"locations": {
 				"/docs/": {
 					"root": "public/resources/",
